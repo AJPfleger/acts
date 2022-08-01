@@ -14,6 +14,7 @@ from helpers import (
     AssertCollectionExistsAlg,
     isCI,
     doHashChecks,
+    failure_threshold,
 )
 
 pytestmark = pytest.mark.skipif(not rootEnabled, reason="ROOT not set up")
@@ -27,7 +28,8 @@ from acts.examples import (
     RootParticleWriter,
 )
 
-from common import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector
+from common import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
@@ -273,6 +275,7 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
     assert_csv_output(csv, "particles_initial")
 
 
+@pytest.mark.slow
 def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
     from propagation import runPropagation
 
@@ -343,7 +346,13 @@ def test_event_recording(tmp_path):
 
     env = os.environ.copy()
     env["NEVENTS"] = "1"
-    subprocess.check_call([str(script)], cwd=tmp_path, env=env)
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+    subprocess.check_call(
+        [str(script)],
+        cwd=tmp_path,
+        env=env,
+        stderr=subprocess.STDOUT,
+    )
 
     from acts.examples.hepmc3 import HepMC3AsciiReader
 
@@ -443,7 +452,9 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
         s=seq,
     )
 
-    seq.run()
+    # See https://github.com/acts-project/acts/issues/1300
+    with failure_threshold(acts.logging.FATAL):
+        seq.run()
 
     del seq
 
@@ -487,7 +498,9 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     from material_mapping import runMaterialMapping
 
@@ -523,11 +536,12 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     # test the validation as well
 
     # we need to destroy the ODD to reload with material
-    # del trackingGeometry
-    # del detector
+    del trackingGeometry
+    del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        getOpenDataDetectorDirectory(),
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
     )
 
     from material_validation import runMaterialValidation
@@ -562,7 +576,8 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         assert json.load(fh)
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
+        getOpenDataDetectorDirectory(),
+        mdecorator=acts.IMaterialDecorator.fromFile(geo_map),
     )
 
     from material_mapping import runMaterialMapping
@@ -600,11 +615,12 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     # test the validation as well
 
     # we need to destroy the ODD to reload with material
-    # del trackingGeometry
-    # del detector
+    del trackingGeometry
+    del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        getOpenDataDetectorDirectory(),
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
     )
 
     from material_validation import runMaterialValidation
@@ -633,13 +649,17 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     [
         (GenericDetector.create, 450),
         pytest.param(
-            getOpenDataDetector,
+            functools.partial(getOpenDataDetector, getOpenDataDetectorDirectory()),
             540,
-            marks=pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
+            marks=[
+                pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
+                pytest.mark.slow,
+            ],
         ),
         (functools.partial(AlignedDetector.create, iovSize=1), 450),
     ],
 )
+@pytest.mark.slow
 def test_geometry_example(geoFactory, nobj, tmp_path):
     detector, trackingGeometry, decorators = geoFactory()
 
@@ -821,6 +841,7 @@ def test_digitization_config_example(trk_geo, tmp_path):
     ],
     ids=["full_seeding", "truth_estimated", "truth_smeared"],
 )
+@pytest.mark.slow
 def test_ckf_tracks_example(
     tmp_path, assert_root_hash, truthSmeared, truthEstimated, detector_config
 ):
@@ -874,6 +895,7 @@ def test_ckf_tracks_example(
         truthEstimatedSeeded=truthEstimated,
         s=s,
     )
+
     s.run()
 
     del s  # files are closed in destructors, not great
@@ -893,7 +915,9 @@ def test_ckf_tracks_example(
 @pytest.mark.slow
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_vertex_fitting(tmp_path):
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -930,6 +954,7 @@ import itertools
     ],
 )
 @pytest.mark.filterwarnings("ignore::UserWarning")
+@pytest.mark.flaky(reruns=2)
 def test_vertex_fitting_reading(
     tmp_path, ptcl_gun, rng, finder, inputTracks, entries, assert_root_hash
 ):
@@ -1002,9 +1027,12 @@ def test_vertex_fitting_reading(
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.slow
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector()  # just to make sure it can build
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
 
     script = (
         Path(__file__).parent.parent.parent.parent
@@ -1014,4 +1042,12 @@ def test_full_chain_odd_example(tmp_path):
         / "full_chain_odd.py"
     )
     assert script.exists()
-    subprocess.check_call([str(script)], cwd=tmp_path)
+    env = os.environ.copy()
+    env["NEVENTS"] = "1"
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+    subprocess.check_call(
+        [str(script)],
+        cwd=tmp_path,
+        env=env,
+        stderr=subprocess.STDOUT,
+    )
