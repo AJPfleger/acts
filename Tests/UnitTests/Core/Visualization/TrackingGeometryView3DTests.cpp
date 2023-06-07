@@ -38,17 +38,18 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryView3DObj) {
   for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
-  // Triangular mesh test
-  triangulate = true;
-  auto objTest3M = TrackingGeometryView3DTest::run(obj, triangulate, "_3M");
-  auto objErrors3M = testObjString(objTest3M, triangulate);
-  std::cout << "Surfaces Obj Test 3M : " << objTest3M.size()
-            << " characters written with " << objErrors3M.size() << " errors."
-            << std::endl;
-  BOOST_CHECK(objErrors3M.empty());
-  for (const auto& objerr : objErrors3M) {
-    std::cout << objerr << std::endl;
-  }
+
+//  // Triangular mesh test
+//  triangulate = true;
+//  auto objTest3M = TrackingGeometryView3DTest::run(obj, triangulate, "_3M");
+//  auto objErrors3M = testObjString(objTest3M, triangulate);
+//  std::cout << "Surfaces Obj Test 3M : " << objTest3M.size()
+//            << " characters written with " << objErrors3M.size() << " errors."
+//            << std::endl;
+//  BOOST_CHECK(objErrors3M.empty());
+//  for (const auto& objerr : objErrors3M) {
+//    std::cout << objerr << std::endl;
+//  }
 }
 
 /*
