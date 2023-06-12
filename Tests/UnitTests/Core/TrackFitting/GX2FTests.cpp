@@ -96,10 +96,10 @@ BOOST_AUTO_TEST_CASE(GX2FTest) {
   for (unsigned int i = 0; i < 5; i++) {
     // Position of the surfaces
     CuboidVolumeBuilder::SurfaceConfig cfg;
-    cfg.position = {i * UnitConstants::m, i * UnitConstants::m, 0.};
+    cfg.position = {i * UnitConstants::m, 0, 0.};
 
     // Rotation of the surfaces
-    double rotationAngle = M_PI * 0.25;
+    double rotationAngle = M_PI * 0.5;
     Vector3 xPos(cos(rotationAngle), 0., sin(rotationAngle));
     Vector3 yPos(0., 1., 0.);
     Vector3 zPos(-sin(rotationAngle), 0., cos(rotationAngle));
@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(GX2FTest) {
 ///Shape of the surface
     // Boundaries of the surfaces
     cfg.rBounds =
-        std::make_shared<const RectangleBounds>(RectangleBounds(0.1_m, 0.5_m));
+        std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
 
     // Material of the surfaces
     MaterialSlab matProp(makeBeryllium(), 0.5_mm);
@@ -178,7 +178,7 @@ BOOST_AUTO_TEST_CASE(GX2FTest) {
 ///Outer volume
   CuboidVolumeBuilder::Config config;
   config.position = {2.5_m, 0., 0.};
-  config.length = {6_m, 1.5_m, 1.5_m};
+  config.length = {5_m, 1_m, 1_m};
   config.volumeCfg = {volumeConfig};
 
   cvb.setConfig(config);
