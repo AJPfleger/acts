@@ -31,6 +31,7 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 
 #include <vector>
 
@@ -61,35 +62,32 @@ struct StepVolumeCollector {
   }
 };
 
-BOOST_AUTO_TEST_CASE(GX2FTest) {
+/// AJP for propagator
+using StraightPropagator =
+    Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
 
-  ///---------------------------------------------------------------------------
-  std::cout << "\n*** Start the GX2F unit test ***\n" << std::endl;
+// Construct initial track parameters.
+Acts::CurvilinearTrackParameters makeParameters() {
+  // create covariance matrix from reasonable standard deviations
+  Acts::BoundVector stddev;
+  stddev[Acts::eBoundLoc0] = 100_um;
+  stddev[Acts::eBoundLoc1] = 100_um;
+  stddev[Acts::eBoundTime] = 25_ns;
+  stddev[Acts::eBoundPhi] = 2_degree;
+  stddev[Acts::eBoundTheta] = 2_degree;
+  stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
+  Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  // define a track in the transverse plane along x
+  Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
+  return Acts::CurvilinearTrackParameters(mPos4, 0_degree, 90_degree, 1_GeV,
+                                          1_e, cov);
+}
 
-  ObjVisualization3D obj;
-
-  bool triangulate = true;
-  ViewConfig viewSensitive = ViewConfig({0, 180, 240});
-  viewSensitive.triangulate = triangulate;
-  ViewConfig viewPassive = ViewConfig({240, 280, 0});
-  viewPassive.triangulate = triangulate;
-  ViewConfig viewVolume = ViewConfig({220, 220, 0});
-  viewVolume.triangulate = triangulate;
-  ViewConfig viewContainer = ViewConfig({220, 220, 0});
-  viewContainer.triangulate = triangulate;
-  ViewConfig viewGrid = ViewConfig({220, 0, 0});
-  viewGrid.nSegments = 8;
-  viewGrid.offset = 3.;
-  viewGrid.triangulate = triangulate;
-
-  std::string tag = "gx2f_toydet";
-  ///---------------------------------------------------------------------------
+std::unique_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &tgContext) {
+  std::cout << "\n*** Create Detector with function ***\n" << std::endl;
 
   // Construct builder
   CuboidVolumeBuilder cvb;
-
-  // Create a test context
-  GeometryContext tgContext = GeometryContext();
 
   // Create configurations for surfaces
   std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
@@ -106,7 +104,7 @@ BOOST_AUTO_TEST_CASE(GX2FTest) {
     cfg.rotation.col(0) = xPos;
     cfg.rotation.col(1) = yPos;
     cfg.rotation.col(2) = zPos;
-///Shape of the surface
+    ///Shape of the surface
     // Boundaries of the surfaces
     cfg.rBounds =
         std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
@@ -127,18 +125,6 @@ BOOST_AUTO_TEST_CASE(GX2FTest) {
     surfaceConfig.push_back(cfg);
   }
 
-  // Test that there are actually 4 surface configurations
-//  BOOST_CHECK_EQUAL(surfaceConfig.size(), 4u);
-
-  // Test that 4 surfaces can be built
-//  for (const auto& cfg : surfaceConfig) {
-//    std::shared_ptr<const Surface> pSur = cvb.buildSurface(tgContext, cfg);
-//    BOOST_CHECK_NE(pSur, nullptr);
-//    CHECK_CLOSE_ABS(pSur->center(tgContext), cfg.position, 1e-9);
-//    BOOST_CHECK_NE(pSur->surfaceMaterial(), nullptr);
-//    BOOST_CHECK_NE(pSur->associatedDetectorElement(), nullptr);
-//  }
-
   ////////////////////////////////////////////////////////////////////
   // Build layer configurations
   std::vector<CuboidVolumeBuilder::LayerConfig> layerConfig;
@@ -152,7 +138,7 @@ BOOST_AUTO_TEST_CASE(GX2FTest) {
   for (auto& cfg : layerConfig) {
     cfg.surfaces = {};
   }
-///Inner Volume
+  ///Inner Volume
   // Build volume configuration
   CuboidVolumeBuilder::VolumeConfig volumeConfig;
   volumeConfig.position = {2.5_m, 0., 0.};
@@ -174,31 +160,76 @@ BOOST_AUTO_TEST_CASE(GX2FTest) {
 
   ////////////////////////////////////////////////////////////////////
   // Build TrackingGeometry configuration
-
-///Outer volume
+  ///Outer volume
   CuboidVolumeBuilder::Config config;
   config.position = {2.5_m, 0., 0.};
   config.length = {5_m, 1_m, 1_m};
   config.volumeCfg = {volumeConfig};
 
   cvb.setConfig(config);
+
   TrackingGeometryBuilder::Config tgbCfg;
+
   tgbCfg.trackingVolumeBuilders.push_back(
       [=](const auto& context, const auto& inner, const auto&) {
         return cvb.trackingVolume(context, inner, nullptr);
       });
+
   TrackingGeometryBuilder tgb(tgbCfg);
 
   std::unique_ptr<const TrackingGeometry> detector =
       tgb.trackingGeometry(tgContext);
+  return detector;
+}
 
-  ///---------------------------------------------------------------------------
+
+//struct Detector { ///***********************************************************
+//
+//  std::unique_ptr<const TrackingGeometry> detector =
+//      tgb.trackingGeometry(tgContext);
+//  ///---------------------------------------------------------------------------
+//  Detector(const Acts::GeometryContext& geoCtx)
+//      : store(geoCtx), geometry(store()) {}
+//}; ///**************************************************************************
+
+BOOST_AUTO_TEST_CASE(GX2FTest) {
+  std::cout << "\n*** Start the GX2F unit test ***\n" << std::endl;
+  std::cout << "\n*** Create Detector ***\n" << std::endl;
+
+  // Only need for obj
+  ObjVisualization3D obj;
+
+  bool triangulate = true;
+  ViewConfig viewSensitive = ViewConfig({0, 180, 240});
+  viewSensitive.triangulate = triangulate;
+  ViewConfig viewPassive = ViewConfig({240, 280, 0});
+  viewPassive.triangulate = triangulate;
+  ViewConfig viewVolume = ViewConfig({220, 220, 0});
+  viewVolume.triangulate = triangulate;
+  ViewConfig viewContainer = ViewConfig({220, 220, 0});
+  viewContainer.triangulate = triangulate;
+  ViewConfig viewGrid = ViewConfig({220, 0, 0});
+  viewGrid.nSegments = 8;
+  viewGrid.offset = 3.;
+  viewGrid.triangulate = triangulate;
+
+  std::string tag = "gx2f_toydet";
+
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+
+  std::unique_ptr<const TrackingGeometry> detector = makeToyDetector(tgContext);
+
   const Acts::TrackingVolume& tgVolume = *(detector->highestTrackingVolume());
 
   GeometryView3D::drawTrackingVolume(obj, tgVolume, tgContext, viewContainer,
                                      viewVolume, viewPassive, viewSensitive,
                                      viewGrid, true, tag);
+
   ///---------------------------------------------------------------------------
+
+  std::cout << "\n*** Go to propagator ***\n" << std::endl;
+  
 }
 
 }  // namespace Test
