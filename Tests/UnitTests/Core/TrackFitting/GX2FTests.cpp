@@ -84,8 +84,6 @@ Acts::CurvilinearTrackParameters makeParameters() {
 }
 
 std::unique_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &tgContext) {
-  std::cout << "\n*** Create Detector with function ***\n" << std::endl;
-
   // Construct builder
   CuboidVolumeBuilder cvb;
 
@@ -182,7 +180,6 @@ std::unique_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &t
   return detector;
 }
 
-
 struct Detector {
   // geometry
   std::unique_ptr<const TrackingGeometry> geometry;
@@ -192,41 +189,43 @@ BOOST_AUTO_TEST_CASE(GX2FTest) {
   std::cout << "\n*** Start the GX2F unit test ***\n" << std::endl;
   std::cout << "\n*** Create Detector ***\n" << std::endl;
 
-  // Only need for obj
-  ObjVisualization3D obj;
-
-  bool triangulate = true;
-  ViewConfig viewSensitive = ViewConfig({0, 180, 240});
-  viewSensitive.triangulate = triangulate;
-  ViewConfig viewPassive = ViewConfig({240, 280, 0});
-  viewPassive.triangulate = triangulate;
-  ViewConfig viewVolume = ViewConfig({220, 220, 0});
-  viewVolume.triangulate = triangulate;
-  ViewConfig viewContainer = ViewConfig({220, 220, 0});
-  viewContainer.triangulate = triangulate;
-  ViewConfig viewGrid = ViewConfig({220, 0, 0});
-  viewGrid.nSegments = 8;
-  viewGrid.offset = 3.;
-  viewGrid.triangulate = triangulate;
-
-  std::string tag = "gx2f_toydet";
-
   // Create a test context
   GeometryContext tgContext = GeometryContext();
 
   Detector detector;
   detector.geometry = makeToyDetector(tgContext);
 
-  const Acts::TrackingVolume& tgVolume = *(detector.geometry->highestTrackingVolume());
+  {
+    std::cout << "\n*** Create .obj of Detector ***\n" << std::endl;
+    // Only need for obj
+    ObjVisualization3D obj;
 
-  GeometryView3D::drawTrackingVolume(obj, tgVolume, tgContext, viewContainer,
-                                     viewVolume, viewPassive, viewSensitive,
-                                     viewGrid, true, tag);
+    bool triangulate = true;
+    ViewConfig viewSensitive = ViewConfig({0, 180, 240});
+    viewSensitive.triangulate = triangulate;
+    ViewConfig viewPassive = ViewConfig({240, 280, 0});
+    viewPassive.triangulate = triangulate;
+    ViewConfig viewVolume = ViewConfig({220, 220, 0});
+    viewVolume.triangulate = triangulate;
+    ViewConfig viewContainer = ViewConfig({220, 220, 0});
+    viewContainer.triangulate = triangulate;
+    ViewConfig viewGrid = ViewConfig({220, 0, 0});
+    viewGrid.nSegments = 8;
+    viewGrid.offset = 3.;
+    viewGrid.triangulate = triangulate;
 
-  ///---------------------------------------------------------------------------
+    std::string tag = "gx2f_toydet";
+
+    const Acts::TrackingVolume& tgVolume =
+        *(detector.geometry->highestTrackingVolume());
+
+    GeometryView3D::drawTrackingVolume(obj, tgVolume, tgContext, viewContainer,
+                                       viewVolume, viewPassive, viewSensitive,
+                                       viewGrid, true, tag);
+  }
 
   std::cout << "\n*** Go to propagator ***\n" << std::endl;
-  
+
 }
 
 }  // namespace Test
