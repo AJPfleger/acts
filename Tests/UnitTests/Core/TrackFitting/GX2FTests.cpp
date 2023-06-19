@@ -25,6 +25,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include "Acts/Visualization/ObjVisualization3D.hpp"
@@ -40,33 +41,33 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-struct StepVolumeCollector {
-  ///
-  /// @brief Data container for result analysis
-  ///
-  struct this_result {
-    // Position of the propagator after each step
-    std::vector<Vector3> position;
-    // Volume of the propagator after each step
-    std::vector<TrackingVolume const*> volume;
-  };
-
-  using result_type = this_result;
-
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, result_type& result) const {
-    result.position.push_back(stepper.position(state.stepping));
-    result.volume.push_back(navigator.currentVolume(state.navigation));
-  }
-};
+//struct StepVolumeCollector {
+//  ///
+//  /// @brief Data container for result analysis
+//  ///
+//  struct this_result {
+//    // Position of the propagator after each step
+//    std::vector<Vector3> position;
+//    // Volume of the propagator after each step
+//    std::vector<TrackingVolume const*> volume;
+//  };
+//
+//  using result_type = this_result;
+//
+//  template <typename propagator_state_t, typename stepper_t,
+//            typename navigator_t>
+//  void operator()(propagator_state_t& state, const stepper_t& stepper,
+//                  const navigator_t& navigator, result_type& result) const {
+//    result.position.push_back(stepper.position(state.stepping));
+//    result.volume.push_back(navigator.currentVolume(state.navigation));
+//  }
+//};
 
 /// AJP for propagator
-using StraightPropagator =
-    Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
-
-// Construct initial track parameters.
+//using StraightPropagator =
+//    Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+//
+//// Construct initial track parameters.
 Acts::CurvilinearTrackParameters makeParameters() {
   // create covariance matrix from reasonable standard deviations
   Acts::BoundVector stddev;
@@ -83,7 +84,32 @@ Acts::CurvilinearTrackParameters makeParameters() {
                                           1_e, cov);
 }
 
-std::unique_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &tgContext) {
+
+///vvvvvvvvvvvvvvvvvvvv WIP vvvvvvvvvvvvvvvvvvvv
+// Construct a straight-line propagator.
+auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
+  Acts::Navigator::Config cfg{std::move(geo)};
+  cfg.resolvePassive = false;
+  cfg.resolveMaterial = true;
+  cfg.resolveSensitive = true;
+  Acts::Navigator navigator(cfg);
+  Acts::StraightLineStepper stepper;
+  return Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>(
+      stepper, std::move(navigator));
+}
+
+
+static std::vector<Acts::SourceLink> prepareSourceLinks(
+    const std::vector<TestSourceLink>& sourceLinks) {
+  std::vector<Acts::SourceLink> result;
+  std::transform(sourceLinks.begin(), sourceLinks.end(),
+                 std::back_inserter(result),
+                 [](const auto& sl) { return Acts::SourceLink{sl}; });
+  return result;
+}
+///^^^^^^^^^^^^^^^^^^^^ WIP ^^^^^^^^^^^^^^^^^^^^
+
+std::shared_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &tgContext) {
   // Construct builder
   CuboidVolumeBuilder cvb;
 
@@ -182,10 +208,12 @@ std::unique_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &t
 
 struct Detector {
   // geometry
-  std::unique_ptr<const TrackingGeometry> geometry;
+  std::shared_ptr<const TrackingGeometry> geometry;
 };
 
-BOOST_AUTO_TEST_CASE(GX2FTest) {
+BOOST_AUTO_TEST_SUITE(GX2FTest)
+
+BOOST_AUTO_TEST_CASE(WIP) {
   std::cout << "\n*** Start the GX2F unit test ***\n" << std::endl;
   std::cout << "\n*** Create Detector ***\n" << std::endl;
 
@@ -226,7 +254,80 @@ BOOST_AUTO_TEST_CASE(GX2FTest) {
 
   std::cout << "\n*** Go to propagator ***\n" << std::endl;
 
+  ///vvvvvvvvvvvvvvvvvvvv WIP vvvvvvvvvvvvvvvvvvvv
+  /// AJP: not sure where we need fpe
+//  FpeMonitor fpe;
+  auto start = makeParameters();
+//  auto kfOptions = makeDefaultKalmanFitterOptions();
+//
+//  const auto kfZeroPropagator =
+  //    makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry, 0_T);
+//  const auto kfZero = KalmanFitter(kfZeroPropagator);
+//  // regular smoothing
+//  kfOptions.reversedFiltering = false;
+//  bool expected_reversed = false;
+//  bool expected_smoothed = true;
+//  tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
+//                                          expected_reversed, expected_smoothed,
+//                                          true);
+//
+//
+//
+////  template <typename fitter_t, typename fitter_options_t, typename parameters_t>
+//  void test_ZeroFieldWithSurfaceForward(const fitter_t& fitter,
+//                                        fitter_options_t options,
+//                                        const parameters_t& start, Rng& rng,
+//                                        const bool expected_reversed,
+//                                        const bool expected_smoothed,
+//                                        const bool doDiag) const {
+
+// Context objects
+Acts::GeometryContext geoCtx;
+Acts::MagneticFieldContext magCtx;
+//Acts::CalibrationContext calCtx;
+std::default_random_engine rng(42);
+
+MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
+MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
+MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {150_um}};
+MeasurementResolutionMap resolutions = {
+    {Acts::GeometryIdentifier().setVolume(0), resPixel}
+};
+
+// simulation propagator
+Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator> simPropagator =
+      makeStraightPropagator(detector.geometry);
+auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
+                                       resolutions, rng);
+auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+std::cout << "sourceLinks.size() = " << sourceLinks.size() << std::endl;
+constexpr static size_t nMeasurements = 5u; /// AJP TODO: make detector size variable
+BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
+
+//    // initial fitter options configured for backward filtereing mode
+//    // backward filtering requires a reference surface
+//    options.referenceSurface = &start.referenceSurface();
+//    // this is the default option. set anyways for consistency
+//    options.propagatorPlainOptions.direction = Acts::Direction::Forward;
+//
+//    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+//                                Acts::VectorMultiTrajectory{}};
+//    tracks.addColumn<bool>("reversed");
+//    tracks.addColumn<bool>("smoothed");
+//
+//    auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
+//                          options, tracks);
+//    BOOST_REQUIRE(res.ok());
+
+//    const auto& track = res.value();
+//    BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+
+
+
+  ///^^^^^^^^^^^^^^^^^^^^ WIP ^^^^^^^^^^^^^^^^^^^^
+
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 }  // namespace Acts
