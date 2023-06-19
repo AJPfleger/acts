@@ -183,14 +183,10 @@ std::unique_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &t
 }
 
 
-//struct Detector { ///***********************************************************
-//
-//  std::unique_ptr<const TrackingGeometry> detector =
-//      tgb.trackingGeometry(tgContext);
-//  ///---------------------------------------------------------------------------
-//  Detector(const Acts::GeometryContext& geoCtx)
-//      : store(geoCtx), geometry(store()) {}
-//}; ///**************************************************************************
+struct Detector {
+  // geometry
+  std::unique_ptr<const TrackingGeometry> geometry;
+};
 
 BOOST_AUTO_TEST_CASE(GX2FTest) {
   std::cout << "\n*** Start the GX2F unit test ***\n" << std::endl;
@@ -218,9 +214,10 @@ BOOST_AUTO_TEST_CASE(GX2FTest) {
   // Create a test context
   GeometryContext tgContext = GeometryContext();
 
-  std::unique_ptr<const TrackingGeometry> detector = makeToyDetector(tgContext);
+  Detector detector;
+  detector.geometry = makeToyDetector(tgContext);
 
-  const Acts::TrackingVolume& tgVolume = *(detector->highestTrackingVolume());
+  const Acts::TrackingVolume& tgVolume = *(detector.geometry->highestTrackingVolume());
 
   GeometryView3D::drawTrackingVolume(obj, tgVolume, tgContext, viewContainer,
                                      viewVolume, viewPassive, viewSensitive,
