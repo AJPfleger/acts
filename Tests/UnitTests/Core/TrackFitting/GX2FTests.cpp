@@ -34,6 +34,8 @@
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 
+#include "Acts/Visualization/EventDataView3D.hpp"
+
 #include <vector>
 
 using namespace Acts::UnitLiterals;
@@ -211,6 +213,27 @@ struct Detector {
   std::shared_ptr<const TrackingGeometry> geometry;
 };
 
+static void drawMeasurements(
+    IVisualization3D& helper,
+    const Measurements& measurements,
+    std::shared_ptr<const TrackingGeometry> geometry,
+    const Acts::GeometryContext geoCtx,
+    double locErrorScale = 1.,
+    const ViewConfig& viewConfig = s_viewMeasurement) {
+
+  std::cout << "\n*** Draw measurements ***\n" << std::endl;
+
+  for (auto& singleMeasurement : measurements.sourceLinks){
+    auto cov = singleMeasurement.covariance;
+    auto lposition = singleMeasurement.parameters;
+
+    auto surf = geometry->findSurface(singleMeasurement.m_geometryId);
+    auto transf = surf->transform(geoCtx);
+
+    EventDataView3D::drawMeasurement(helper, lposition, cov, transf, locErrorScale, viewConfig);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE(GX2FTest)
 
 BOOST_AUTO_TEST_CASE(WIP) {
@@ -288,8 +311,8 @@ Acts::MagneticFieldContext magCtx;
 std::default_random_engine rng(42);
 
 MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
-MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
-MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {150_um}};
+//MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
+//MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {150_um}};
 MeasurementResolutionMap resolutions = {
     {Acts::GeometryIdentifier().setVolume(0), resPixel}
 };
@@ -304,25 +327,21 @@ std::cout << "sourceLinks.size() = " << sourceLinks.size() << std::endl;
 constexpr static size_t nMeasurements = 5u; /// AJP TODO: make detector size variable
 BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
-//    // initial fitter options configured for backward filtereing mode
-//    // backward filtering requires a reference surface
-//    options.referenceSurface = &start.referenceSurface();
-//    // this is the default option. set anyways for consistency
-//    options.propagatorPlainOptions.direction = Acts::Direction::Forward;
-//
-//    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
-//                                Acts::VectorMultiTrajectory{}};
-//    tracks.addColumn<bool>("reversed");
-//    tracks.addColumn<bool>("smoothed");
-//
-//    auto res = fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
-//                          options, tracks);
-//    BOOST_REQUIRE(res.ok());
 
-//    const auto& track = res.value();
-//    BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+{
+  std::cout << "\n*** Create .obj of measurements ***\n" << std::endl;
+  ObjVisualization3D obj;
 
+  double localErrorScale = 10000000.;
+  ViewConfig mcolor({255, 145, 48});
+  mcolor.offset = 2;
+//  mcolor.visible = true;
 
+  drawMeasurements(obj, measurements, detector.geometry, geoCtx,
+                                   localErrorScale, mcolor);
+
+  obj.write("meas");
+}
 
   ///^^^^^^^^^^^^^^^^^^^^ WIP ^^^^^^^^^^^^^^^^^^^^
 
