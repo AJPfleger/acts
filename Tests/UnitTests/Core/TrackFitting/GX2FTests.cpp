@@ -23,18 +23,15 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-
-#include "Acts/Visualization/ObjVisualization3D.hpp"
-#include "Acts/Visualization/GeometryView3D.hpp"
-
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
-
 #include "Acts/Visualization/EventDataView3D.hpp"
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <vector>
 
@@ -43,8 +40,8 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-//struct StepVolumeCollector {
-//  ///
+// struct StepVolumeCollector {
+//   ///
 //  /// @brief Data container for result analysis
 //  ///
 //  struct this_result {
@@ -66,8 +63,8 @@ namespace Test {
 //};
 
 /// AJP for propagator
-//using StraightPropagator =
-//    Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+// using StraightPropagator =
+//     Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
 //
 //// Construct initial track parameters.
 Acts::CurvilinearTrackParameters makeParameters() {
@@ -86,8 +83,7 @@ Acts::CurvilinearTrackParameters makeParameters() {
                                           1_e, cov);
 }
 
-
-///vvvvvvvvvvvvvvvvvvvv WIP vvvvvvvvvvvvvvvvvvvv
+/// vvvvvvvvvvvvvvvvvvvv WIP vvvvvvvvvvvvvvvvvvvv
 // Construct a straight-line propagator.
 auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
   Acts::Navigator::Config cfg{std::move(geo)};
@@ -100,7 +96,6 @@ auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
       stepper, std::move(navigator));
 }
 
-
 static std::vector<Acts::SourceLink> prepareSourceLinks(
     const std::vector<TestSourceLink>& sourceLinks) {
   std::vector<Acts::SourceLink> result;
@@ -111,8 +106,8 @@ static std::vector<Acts::SourceLink> prepareSourceLinks(
 }
 ///^^^^^^^^^^^^^^^^^^^^ WIP ^^^^^^^^^^^^^^^^^^^^
 
-std::shared_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &tgContext, const size_t nSurfaces = 5) {
-
+std::shared_ptr<const TrackingGeometry> makeToyDetector(
+    const GeometryContext& tgContext, const size_t nSurfaces = 5) {
   if (nSurfaces < 1) {
     throw std::invalid_argument("At least 1 surfaces needs to be created.");
   }
@@ -134,7 +129,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &t
     cfg.rotation.col(0) = xPos;
     cfg.rotation.col(1) = yPos;
     cfg.rotation.col(2) = zPos;
-    ///Shape of the surface
+    /// Shape of the surface
     // Boundaries of the surfaces
     cfg.rBounds =
         std::make_shared<const RectangleBounds>(RectangleBounds(0.5_m, 0.5_m));
@@ -164,11 +159,11 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &t
     layerConfig.push_back(cfg);
   }
 
-  ///What's happening here?
+  /// What's happening here?
   for (auto& cfg : layerConfig) {
     cfg.surfaces = {};
   }
-  ///Inner Volume
+  /// Inner Volume
   // Build volume configuration
   CuboidVolumeBuilder::VolumeConfig volumeConfig;
   volumeConfig.position = {2.5_m, 0., 0.};
@@ -178,9 +173,9 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &t
   volumeConfig.volumeMaterial =
       std::make_shared<HomogeneousVolumeMaterial>(makeBeryllium());
 
-  ///volume soll kein material haben!
+  /// volume soll kein material haben!
   std::shared_ptr<TrackingVolume> trVol;
-  ///kein volumen im volumen
+  /// kein volumen im volumen
 
   volumeConfig.layers.clear();
   for (auto& lay : volumeConfig.layerCfg) {
@@ -190,7 +185,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &t
 
   ////////////////////////////////////////////////////////////////////
   // Build TrackingGeometry configuration
-  ///Outer volume
+  /// Outer volume
   CuboidVolumeBuilder::Config config;
   config.position = {2.5_m, 0., 0.};
   config.length = {5_m, 1_m, 1_m};
@@ -217,24 +212,23 @@ struct Detector {
   std::shared_ptr<const TrackingGeometry> geometry;
 };
 
-static void drawMeasurements(
-    IVisualization3D& helper,
-    const Measurements& measurements,
-    std::shared_ptr<const TrackingGeometry> geometry,
-    const Acts::GeometryContext geoCtx,
-    double locErrorScale = 1.,
-    const ViewConfig& viewConfig = s_viewMeasurement) {
-
+static void drawMeasurements(IVisualization3D& helper,
+                             const Measurements& measurements,
+                             std::shared_ptr<const TrackingGeometry> geometry,
+                             const Acts::GeometryContext geoCtx,
+                             double locErrorScale = 1.,
+                             const ViewConfig& viewConfig = s_viewMeasurement) {
   std::cout << "\n*** Draw measurements ***\n" << std::endl;
 
-  for (auto& singleMeasurement : measurements.sourceLinks){
+  for (auto& singleMeasurement : measurements.sourceLinks) {
     auto cov = singleMeasurement.covariance;
     auto lposition = singleMeasurement.parameters;
 
     auto surf = geometry->findSurface(singleMeasurement.m_geometryId);
     auto transf = surf->transform(geoCtx);
 
-    EventDataView3D::drawMeasurement(helper, lposition, cov, transf, locErrorScale, viewConfig);
+    EventDataView3D::drawMeasurement(helper, lposition, cov, transf,
+                                     locErrorScale, viewConfig);
   }
 }
 
@@ -282,75 +276,74 @@ BOOST_AUTO_TEST_CASE(WIP) {
 
   std::cout << "\n*** Go to propagator ***\n" << std::endl;
 
-  ///vvvvvvvvvvvvvvvvvvvv WIP vvvvvvvvvvvvvvvvvvvv
-  /// AJP: not sure where we need fpe
-//  FpeMonitor fpe;
+  /// vvvvvvvvvvvvvvvvvvvv WIP vvvvvvvvvvvvvvvvvvvv
+  ///  AJP: not sure where we need fpe
+  //  FpeMonitor fpe;
   auto start = makeParameters();
-//  auto kfOptions = makeDefaultKalmanFitterOptions();
-//
-//  const auto kfZeroPropagator =
+  //  auto kfOptions = makeDefaultKalmanFitterOptions();
+  //
+  //  const auto kfZeroPropagator =
   //    makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry, 0_T);
-//  const auto kfZero = KalmanFitter(kfZeroPropagator);
-//  // regular smoothing
-//  kfOptions.reversedFiltering = false;
-//  bool expected_reversed = false;
-//  bool expected_smoothed = true;
-//  tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
-//                                          expected_reversed, expected_smoothed,
-//                                          true);
-//
-//
-//
-////  template <typename fitter_t, typename fitter_options_t, typename parameters_t>
-//  void test_ZeroFieldWithSurfaceForward(const fitter_t& fitter,
-//                                        fitter_options_t options,
-//                                        const parameters_t& start, Rng& rng,
-//                                        const bool expected_reversed,
-//                                        const bool expected_smoothed,
-//                                        const bool doDiag) const {
+  //  const auto kfZero = KalmanFitter(kfZeroPropagator);
+  //  // regular smoothing
+  //  kfOptions.reversedFiltering = false;
+  //  bool expected_reversed = false;
+  //  bool expected_smoothed = true;
+  //  tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
+  //                                          expected_reversed,
+  //                                          expected_smoothed, true);
+  //
+  //
+  //
+  ////  template <typename fitter_t, typename fitter_options_t, typename
+  ///parameters_t>
+  //  void test_ZeroFieldWithSurfaceForward(const fitter_t& fitter,
+  //                                        fitter_options_t options,
+  //                                        const parameters_t& start, Rng& rng,
+  //                                        const bool expected_reversed,
+  //                                        const bool expected_smoothed,
+  //                                        const bool doDiag) const {
 
-// Context objects
-Acts::GeometryContext geoCtx;
-Acts::MagneticFieldContext magCtx;
-//Acts::CalibrationContext calCtx;
-std::default_random_engine rng(42);
+  // Context objects
+  Acts::GeometryContext geoCtx;
+  Acts::MagneticFieldContext magCtx;
+  // Acts::CalibrationContext calCtx;
+  std::default_random_engine rng(42);
 
-MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
-//MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
-//MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {150_um}};
-MeasurementResolutionMap resolutions = {{Acts::GeometryIdentifier().setVolume(0), resPixel}};
+  MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
+  // MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
+  // MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {150_um}};
+  MeasurementResolutionMap resolutions = {
+      {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
-// simulation propagator
-Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator> simPropagator =
+  // simulation propagator
+  Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator> simPropagator =
       makeStraightPropagator(detector.geometry);
-auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
-                                       resolutions, rng);
-auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
-std::cout << "sourceLinks.size() = " << sourceLinks.size() << std::endl;
+  auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
+                                         resolutions, rng);
+  auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  std::cout << "sourceLinks.size() = " << sourceLinks.size() << std::endl;
 
-BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
 
+  {
+    std::cout << "\n*** Create .obj of measurements ***\n" << std::endl;
+    ObjVisualization3D obj;
 
-{
-  std::cout << "\n*** Create .obj of measurements ***\n" << std::endl;
-  ObjVisualization3D obj;
+    double localErrorScale = 10000000.;
+    ViewConfig mcolor({255, 145, 48});
+    mcolor.offset = 2;
+    //  mcolor.visible = true;
 
-  double localErrorScale = 10000000.;
-  ViewConfig mcolor({255, 145, 48});
-  mcolor.offset = 2;
-//  mcolor.visible = true;
+    drawMeasurements(obj, measurements, detector.geometry, geoCtx,
+                     localErrorScale, mcolor);
 
-  drawMeasurements(obj, measurements, detector.geometry, geoCtx,
-                                   localErrorScale, mcolor);
+    obj.write("meas");
+  }
 
-  obj.write("meas");
-}
-
-
-std::cout << "\n*** Start fitting ***\n" << std::endl;
+  std::cout << "\n*** Start fitting ***\n" << std::endl;
 
   ///^^^^^^^^^^^^^^^^^^^^ WIP ^^^^^^^^^^^^^^^^^^^^
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()
