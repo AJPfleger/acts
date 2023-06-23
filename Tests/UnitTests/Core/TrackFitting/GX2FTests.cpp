@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(WIP) {
   GeometryContext tgContext = GeometryContext();
 
   Detector detector;
-  const size_t nSurfaces = 5u;
+  const size_t nSurfaces = 5;
   detector.geometry = makeToyDetector(tgContext, nSurfaces);
 
   {
