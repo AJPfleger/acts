@@ -111,13 +111,17 @@ static std::vector<Acts::SourceLink> prepareSourceLinks(
 }
 ///^^^^^^^^^^^^^^^^^^^^ WIP ^^^^^^^^^^^^^^^^^^^^
 
-std::shared_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &tgContext) {
+std::shared_ptr<const TrackingGeometry> makeToyDetector(const GeometryContext &tgContext, const size_t nSurfaces = 5) {
+
+  if (nSurfaces < 1) {
+    throw std::invalid_argument("At least 1 surfaces needs to be created.");
+  }
   // Construct builder
   CuboidVolumeBuilder cvb;
 
   // Create configurations for surfaces
   std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
-  for (unsigned int i = 0; i < 5; i++) {
+  for (unsigned int i = 0; i < nSurfaces; i++) {
     // Position of the surfaces
     CuboidVolumeBuilder::SurfaceConfig cfg;
     cfg.position = {i * UnitConstants::m, 0, 0.};
@@ -244,7 +248,8 @@ BOOST_AUTO_TEST_CASE(WIP) {
   GeometryContext tgContext = GeometryContext();
 
   Detector detector;
-  detector.geometry = makeToyDetector(tgContext);
+  const size_t nSurfaces = 5u;
+  detector.geometry = makeToyDetector(tgContext, nSurfaces);
 
   {
     std::cout << "\n*** Create .obj of Detector ***\n" << std::endl;
@@ -313,9 +318,7 @@ std::default_random_engine rng(42);
 MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
 //MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
 //MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {150_um}};
-MeasurementResolutionMap resolutions = {
-    {Acts::GeometryIdentifier().setVolume(0), resPixel}
-};
+MeasurementResolutionMap resolutions = {{Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
 // simulation propagator
 Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator> simPropagator =
@@ -324,8 +327,8 @@ auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                        resolutions, rng);
 auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
 std::cout << "sourceLinks.size() = " << sourceLinks.size() << std::endl;
-constexpr static size_t nMeasurements = 5u; /// AJP TODO: make detector size variable
-BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
+
+BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
 
 
 {
@@ -342,6 +345,9 @@ BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
   obj.write("meas");
 }
+
+
+std::cout << "\n*** Start fitting ***\n" << std::endl;
 
   ///^^^^^^^^^^^^^^^^^^^^ WIP ^^^^^^^^^^^^^^^^^^^^
 
