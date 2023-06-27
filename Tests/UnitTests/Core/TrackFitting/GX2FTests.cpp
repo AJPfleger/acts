@@ -45,6 +45,8 @@
 
 #include "Acts/TrackFitting/GX2FFitter.hpp"
 
+#include "FitterTestsCommon.hpp"
+
 using namespace Acts::UnitLiterals;
 
 namespace Acts {
@@ -240,6 +242,24 @@ static void drawMeasurements(IVisualization3D& helper,
     EventDataView3D::drawMeasurement(helper, lposition, cov, transf,
                                      locErrorScale, viewConfig);
   }
+}
+
+using KalmanUpdater = Acts::GainMatrixUpdater;
+using KalmanSmoother = Acts::GainMatrixSmoother;
+KalmanUpdater kfUpdater;
+KalmanSmoother kfSmoother;
+const FitterTester tester;
+auto makeDefaultGX2FFitterOptions() {
+  GX2FFitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
+      &kfUpdater);
+  extensions.smoother
+      .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
+
+  return GX2FFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
+                             extensions, PropagatorPlainOptions());
 }
 
 BOOST_AUTO_TEST_SUITE(GX2FTest)
@@ -506,8 +526,42 @@ BOOST_AUTO_TEST_CASE(WIP) {
           momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
           ppcolor, fpcolor, spcolor);
 
+      std::cout << "tracks.size() = " << tracks.size() << std::endl;
+//      std::cout << "tracks.container() = " << tracks.container() << std::endl;
+//      std::cout << "tracks.covariance() = " << tracks.covariance() << std::endl;
+//      std::cout << "tracks.parameters() = " << tracks.parameters() << std::endl;
+//      std::cout << "tracks.component() = " << tracks.component() << std::endl;
+
       obj.write("Fitted_Track_GX2F");
     }
+
+
+    /// add some tests. probably need to rewrite to fit for gx2f
+//    BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward)
+    {
+      using ConstantFieldStepper = Acts::EigenStepper<>;
+      using ConstantFieldPropagator =
+          Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
+//      using KalmanUpdater = Acts::GainMatrixUpdater;
+//      using KalmanSmoother = Acts::GainMatrixSmoother;
+      using GX2FFitter2 =
+//          Acts::GX2FFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
+          Acts::GX2FFitter<RecoPropagator, VectorMultiTrajectory>;
+//      const FitterTester tester;
+      const auto kfZeroPropagator =
+          makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry, 0_T);
+      const auto kfZero = GX2FFitter2(kfZeroPropagator);
+//      FpeMonitor fpe;
+//      auto start = makeParameters();
+      auto gx2fOptions2 = makeDefaultGX2FFitterOptions();
+
+      bool expected_reversed = false;
+      bool expected_smoothed = false;
+      tester.test_ZeroFieldNoSurfaceForward(kfZero, gx2fOptions2, start, rng,
+                                            expected_reversed, expected_smoothed,
+                                            false);
+    }
+
   }
   ///^^^^^^^^^^^^^^^^^^^^ WIP ^^^^^^^^^^^^^^^^^^^^
 }

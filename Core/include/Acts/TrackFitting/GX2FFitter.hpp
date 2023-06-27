@@ -45,7 +45,7 @@
 
 namespace Acts {
 
-/// Extension struct which holeds delegates to customize the KF behavior
+/// Extension struct which holds delegates to customize the KF behavior
 template <typename traj_t>
 struct GX2FFitterExtensions {
   using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
@@ -1123,154 +1123,146 @@ class GX2FFitter {
 
     calculateTrackQuantities(track);
 
-    if (trackContainer.hasColumn(hashString("smoothed"))) {
-      track.template component<bool, hashString("smoothed")>() =
-          kalmanResult.smoothed;
-    }
-    if (trackContainer.hasColumn(hashString("reversed"))) {
-      track.template component<bool, hashString("reversed")>() =
-          kalmanResult.reversed;
-    }
+//    if (trackContainer.hasColumn(hashString("smoothed"))) {
+//      track.template component<bool, hashString("smoothed")>() =
+//          kalmanResult.smoothed;
+//    }
 
     // Return the converted Track
     return track;
   }
 
-  /// Fit implementation of the foward filter, calls the
-  /// the filter and smoother/reversed filter
-  ///
-  /// @tparam source_link_iterator_t Iterator type used to pass source links
-  /// @tparam start_parameters_t Type of the initial parameters
-  /// @tparam parameters_t Type of parameters used for local parameters
-  /// @tparam track_container_t Type of the track container backend
-  /// @tparam holder_t Type defining track container backend ownership
-  ///
-  /// @param it Begin iterator for the fittable uncalibrated measurements
-  /// @param end End iterator for the fittable uncalibrated measurements
-  /// @param sParameters The initial track parameters
-  /// @param kfOptions KalmanOptions steering the fit
-  /// @param sSequence surface sequence used to initialize a DirectNavigator
-  /// @param trackContainer Input track container storage to append into
-  /// @note The input measurements are given in the form of @c SourceLinks.
-  /// It's
-  /// @c calibrator_t's job to turn them into calibrated measurements used in
-  /// the fit.
-  ///
-  /// @return the output as an output track
-  template <typename source_link_iterator_t, typename start_parameters_t,
-            typename parameters_t = BoundTrackParameters,
-            typename track_container_t, template <typename> class holder_t,
-            bool _isdn = isDirectNavigator>
-  auto fit(source_link_iterator_t it, source_link_iterator_t end,
-           const start_parameters_t& sParameters,
-           const GX2FFitterOptions<traj_t>& kfOptions,
-           const std::vector<const Surface*>& sSequence,
-           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
-      const -> std::enable_if_t<
-          _isdn, Result<typename TrackContainer<track_container_t, traj_t,
-                                                holder_t>::TrackProxy>> {
-    // To be able to find measurements later, we put them into a map
-    // We need to copy input SourceLinks anyways, so the map can own them.
-    ACTS_VERBOSE("Preparing " << std::distance(it, end)
-                              << " input measurements");
-    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
-    for (; it != end; ++it) {
-      SourceLink sl = *it;
-      inputMeasurements.emplace(sl.geometryId(), sl);
-    }
 
-    // Create the ActionList and AbortList
-    using KalmanAborter = Aborter<parameters_t>;
-    using KalmanActor = Actor<parameters_t>;
 
-    using KalmanResult = typename KalmanActor::result_type;
-    using Actors = ActionList<DirectNavigator::Initializer, KalmanActor>;
-    using Aborters = AbortList<KalmanAborter>;
+    //  /// Fit implementation of the foward filter, calls the
+    //  /// the filter and smoother/reversed filter
+    //  ///
+    //  /// @tparam source_link_iterator_t Iterator type used to pass source links
+    //  /// @tparam start_parameters_t Type of the initial parameters
+    //  /// @tparam parameters_t Type of parameters used for local parameters
+    //  /// @tparam track_container_t Type of the track container backend
+    //  /// @tparam holder_t Type defining track container backend ownership
+    //  ///
+    //  /// @param it Begin iterator for the fittable uncalibrated measurements
+    //  /// @param end End iterator for the fittable uncalibrated measurements
+    //  /// @param sParameters The initial track parameters
+    //  /// @param kfOptions KalmanOptions steering the fit
+    //  /// @param sSequence surface sequence used to initialize a DirectNavigator
+    //  /// @param trackContainer Input track container storage to append into
+    //  /// @note The input measurements are given in the form of @c SourceLinks.
+    //  /// It's
+    //  /// @c calibrator_t's job to turn them into calibrated measurements used in
+    //  /// the fit.
+    //  ///
+    //  /// @return the output as an output track
+    //  template <typename source_link_iterator_t, typename start_parameters_t,
+    //            typename parameters_t = BoundTrackParameters,
+    //            typename track_container_t, template <typename> class holder_t, bool _isdn = isDirectNavigator>
+    //  auto fit(source_link_iterator_t it, source_link_iterator_t end,
+    //           const start_parameters_t& sParameters,
+    //           const GX2FFitterOptions<traj_t>& kfOptions,
+    //           const std::vector<const Surface*>& sSequence,
+    //           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
+    //      const -> std::enable_if_t<
+    //          _isdn, Result<typename TrackContainer<track_container_t, traj_t,
+    //                                                holder_t>::TrackProxy>> {
+    //    // To be able to find measurements later, we put them into a map
+    //    // We need to copy input SourceLinks anyways, so the map can own them.
+    //    ACTS_VERBOSE("Preparing " << std::distance(it, end)
+    //                              << " input measurements");
+    //    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+    //    for (; it != end; ++it) {
+    //      SourceLink sl = *it;
+    //      inputMeasurements.emplace(sl.geometryId(), sl);
+    //    }
+    //
+    //    // Create the ActionList and AbortList
+    //    using KalmanAborter = Aborter<parameters_t>;
+    //    using KalmanActor = Actor<parameters_t>;
+    //
+    //    using KalmanResult = typename KalmanActor::result_type;
+    //    using Actors = ActionList<DirectNavigator::Initializer, KalmanActor>;
+    //    using Aborters = AbortList<KalmanAborter>;
+    //
+    //    // Create relevant options for the propagation options
+    //    PropagatorOptions<Actors, Aborters> kalmanOptions(
+    //        kfOptions.geoContext, kfOptions.magFieldContext);
+    //
+    //    // Set the trivial propagator options
+    //    kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
+    //
+    //    // Catch the actor and set the measurements
+    //    auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>(); kalmanActor.inputMeasurements = &inputMeasurements; kalmanActor.targetSurface = kfOptions.referenceSurface; kalmanActor.multipleScattering = kfOptions.multipleScattering; kalmanActor.energyLoss = kfOptions.energyLoss; kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
+    //    kalmanActor.reversedFilteringCovarianceScaling =
+    //        kfOptions.reversedFilteringCovarianceScaling;
+    //    kalmanActor.extensions = kfOptions.extensions;
+    //    kalmanActor.actorLogger = m_actorLogger.get();
+    //
+    //    // Set the surface sequence
+    //    auto& dInitializer =
+    //        kalmanOptions.actionList.template get<DirectNavigator::Initializer>();
+    //    dInitializer.navSurfaces = sSequence;
+    //
+    //    typename propagator_t::template action_list_t_result_t<
+    //        CurvilinearTrackParameters, Actors>
+    //        inputResult;
+    //
+    //    auto& r = inputResult.template get<GX2FFitterResult<traj_t>>();
+    //
+    //    r.fittedStates = &trackContainer.trackStateContainer();
+    //
+    //    // Run the fitter
+    //    auto result = m_propagator.template propagate(sParameters, kalmanOptions,
+    //                                                  std::move(inputResult));
+    //
+    //    if (!result.ok()) {
+    //      ACTS_ERROR("Propapation failed: " << result.error());
+    //      return result.error();
+    //    }
+    //
+    //    const auto& propRes = *result;
+    //
+    //    /// Get the result of the fit
+    //    auto kalmanResult = propRes.template get<KalmanResult>();
+    //
+    //    /// It could happen that the fit ends in zero measurement states.
+    //    /// The result gets meaningless so such case is regarded as fit failure. if (kalmanResult.result.ok() and not kalmanResult.measurementStates) {
+    //      kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
+    //    }
+    //
+    //    if (!kalmanResult.result.ok()) {
+    //      ACTS_ERROR("KalmanFilter failed: "
+    //                 << kalmanResult.result.error() << ", "
+    //                 << kalmanResult.result.error().message());
+    //      return kalmanResult.result.error();
+    //    }
+    //
+    //    auto track = trackContainer.getTrack(trackContainer.addTrack());
+    //    track.tipIndex() = kalmanResult.lastMeasurementIndex;
+    //    if (kalmanResult.fittedParameters) {
+    //      const auto& params = kalmanResult.fittedParameters.value();
+    //      track.parameters() = params.parameters();
+    //      track.covariance() = params.covariance().value();
+    //      track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+    //    }
+    //    track.nMeasurements() = kalmanResult.measurementStates;
+    //    track.nHoles() = kalmanResult.measurementHoles;
+    //
+    //    calculateTrackQuantities(track);
+    //
+    //    if (trackContainer.hasColumn(hashString("smoothed"))) {
+    //      track.template component<bool, hashString("smoothed")>() =
+    //          kalmanResult.smoothed;
+    //    }
+    //    if (trackContainer.hasColumn(hashString("reversed"))) {
+    //      track.template component<bool, hashString("reversed")>() =
+    //          kalmanResult.reversed;
+    //    }
+    //
+    //    // Return the converted Track
+    //    return track;
+    //  }
 
-    // Create relevant options for the propagation options
-    PropagatorOptions<Actors, Aborters> kalmanOptions(
-        kfOptions.geoContext, kfOptions.magFieldContext);
-
-    // Set the trivial propagator options
-    kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
-
-    // Catch the actor and set the measurements
-    auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
-    kalmanActor.inputMeasurements = &inputMeasurements;
-    kalmanActor.targetSurface = kfOptions.referenceSurface;
-    kalmanActor.multipleScattering = kfOptions.multipleScattering;
-    kalmanActor.energyLoss = kfOptions.energyLoss;
-    kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
-    kalmanActor.reversedFilteringCovarianceScaling =
-        kfOptions.reversedFilteringCovarianceScaling;
-    kalmanActor.extensions = kfOptions.extensions;
-    kalmanActor.actorLogger = m_actorLogger.get();
-
-    // Set the surface sequence
-    auto& dInitializer =
-        kalmanOptions.actionList.template get<DirectNavigator::Initializer>();
-    dInitializer.navSurfaces = sSequence;
-
-    typename propagator_t::template action_list_t_result_t<
-        CurvilinearTrackParameters, Actors>
-        inputResult;
-
-    auto& r = inputResult.template get<GX2FFitterResult<traj_t>>();
-
-    r.fittedStates = &trackContainer.trackStateContainer();
-
-    // Run the fitter
-    auto result = m_propagator.template propagate(sParameters, kalmanOptions,
-                                                  std::move(inputResult));
-
-    if (!result.ok()) {
-      ACTS_ERROR("Propapation failed: " << result.error());
-      return result.error();
-    }
-
-    const auto& propRes = *result;
-
-    /// Get the result of the fit
-    auto kalmanResult = propRes.template get<KalmanResult>();
-
-    /// It could happen that the fit ends in zero measurement states.
-    /// The result gets meaningless so such case is regarded as fit failure.
-    if (kalmanResult.result.ok() and not kalmanResult.measurementStates) {
-      kalmanResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
-    }
-
-    if (!kalmanResult.result.ok()) {
-      ACTS_ERROR("KalmanFilter failed: "
-                 << kalmanResult.result.error() << ", "
-                 << kalmanResult.result.error().message());
-      return kalmanResult.result.error();
-    }
-
-    auto track = trackContainer.getTrack(trackContainer.addTrack());
-    track.tipIndex() = kalmanResult.lastMeasurementIndex;
-    if (kalmanResult.fittedParameters) {
-      const auto& params = kalmanResult.fittedParameters.value();
-      track.parameters() = params.parameters();
-      track.covariance() = params.covariance().value();
-      track.setReferenceSurface(params.referenceSurface().getSharedPtr());
-    }
-    track.nMeasurements() = kalmanResult.measurementStates;
-    track.nHoles() = kalmanResult.measurementHoles;
-
-    calculateTrackQuantities(track);
-
-    if (trackContainer.hasColumn(hashString("smoothed"))) {
-      track.template component<bool, hashString("smoothed")>() =
-          kalmanResult.smoothed;
-    }
-    if (trackContainer.hasColumn(hashString("reversed"))) {
-      track.template component<bool, hashString("reversed")>() =
-          kalmanResult.reversed;
-    }
-
-    // Return the converted Track
-    return track;
-  }
 };
 
 }  // namespace Acts
