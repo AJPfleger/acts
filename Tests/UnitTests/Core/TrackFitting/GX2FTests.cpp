@@ -17,16 +17,16 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
-#include "Acts/Material/Material.hpp"
+//#include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+//#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+//#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Visualization/EventDataView3D.hpp"
@@ -34,6 +34,16 @@
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <vector>
+
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+
+#include "Acts/TrackFitting/GX2FFitter.hpp"
 
 using namespace Acts::UnitLiterals;
 
@@ -296,7 +306,7 @@ BOOST_AUTO_TEST_CASE(WIP) {
   //
   //
   ////  template <typename fitter_t, typename fitter_options_t, typename
-  ///parameters_t>
+  /// parameters_t>
   //  void test_ZeroFieldWithSurfaceForward(const fitter_t& fitter,
   //                                        fitter_options_t options,
   //                                        const parameters_t& start, Rng& rng,
@@ -317,8 +327,9 @@ BOOST_AUTO_TEST_CASE(WIP) {
       {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
   // simulation propagator
-  Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator> simPropagator =
-      makeStraightPropagator(detector.geometry);
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
   auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                          resolutions, rng);
   auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
@@ -343,6 +354,161 @@ BOOST_AUTO_TEST_CASE(WIP) {
 
   std::cout << "\n*** Start fitting ***\n" << std::endl;
 
+  /// KalmanFitter
+  {
+    const Surface* rSurface = &start.referenceSurface();
+
+    Navigator::Config cfg{detector.geometry};
+    cfg.resolvePassive = false;
+    cfg.resolveMaterial = true;
+    cfg.resolveSensitive = true;
+    Navigator rNavigator(cfg);
+    // Configure propagation with deactivated B-field
+    auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
+    using RecoStepper = EigenStepper<>;
+    RecoStepper rStepper(bField);
+    using RecoPropagator = Propagator<RecoStepper, Navigator>;
+    RecoPropagator rPropagator(rStepper, rNavigator);
+
+    using KalmanFitter = KalmanFitter<RecoPropagator, VectorMultiTrajectory>;
+
+    KalmanFitter kFitter(rPropagator);
+
+    //  auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
+
+    Acts::GainMatrixUpdater kfUpdater;
+    Acts::GainMatrixSmoother kfSmoother;
+
+    KalmanFitterExtensions<VectorMultiTrajectory> extensions;
+    extensions.calibrator
+        .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+    extensions.updater
+        .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
+            &kfUpdater);
+    extensions.smoother
+        .connect<&Acts::GainMatrixSmoother::operator()<VectorMultiTrajectory>>(
+            &kfSmoother);
+
+    MagneticFieldContext mfContext = MagneticFieldContext();
+    CalibrationContext calContext = CalibrationContext();
+
+    KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
+                                  PropagatorPlainOptions(), rSurface);
+
+    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                                Acts::VectorMultiTrajectory{}};
+
+    // Fit the track
+    auto fitRes = kFitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                              kfOptions, tracks);
+
+    auto& track = *fitRes;
+
+    {
+      ObjVisualization3D obj;
+
+      // Draw the track
+      std::cout << "Draw the fitted track" << std::endl;
+      double momentumScale = 10;
+      double localErrorScale = 1000.;
+      double directionErrorScale = 100000;
+
+      ViewConfig scolor({214, 214, 214});
+      ViewConfig mcolor({255, 145, 48});
+      mcolor.offset = -0.01;
+      ViewConfig ppcolor({51, 204, 51});
+      ppcolor.offset = -0.02;
+      ViewConfig fpcolor({255, 255, 0});
+      fpcolor.offset = -0.03;
+      ViewConfig spcolor({0, 125, 255});
+      spcolor.offset = -0.04;
+
+      EventDataView3D::drawMultiTrajectory(
+          obj, tracks.trackStateContainer(), track.tipIndex(), tgContext,
+          momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
+          ppcolor, fpcolor, spcolor);
+
+      obj.write("Fitted_Track_KF");
+    }
+  }
+
+  /// GX2FFitter
+  {
+    const Surface* rSurface = &start.referenceSurface();
+
+    Navigator::Config cfg{detector.geometry};
+    cfg.resolvePassive = false;
+    cfg.resolveMaterial = true;
+    cfg.resolveSensitive = true;
+    Navigator rNavigator(cfg);
+    // Configure propagation with deactivated B-field
+    auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
+    using RecoStepper = EigenStepper<>;
+    RecoStepper rStepper(bField);
+    using RecoPropagator = Propagator<RecoStepper, Navigator>;
+    RecoPropagator rPropagator(rStepper, rNavigator);
+
+    using GX2FFitter = GX2FFitter<RecoPropagator, VectorMultiTrajectory>;
+
+    GX2FFitter xFitter(rPropagator);
+
+    //  auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
+
+    Acts::GainMatrixUpdater kfUpdater;
+    Acts::GainMatrixSmoother kfSmoother;
+
+    GX2FFitterExtensions<VectorMultiTrajectory> extensions;
+    extensions.calibrator
+        .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+    extensions.updater
+        .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
+            &kfUpdater);
+    extensions.smoother
+        .connect<&Acts::GainMatrixSmoother::operator()<VectorMultiTrajectory>>(
+            &kfSmoother);
+
+    MagneticFieldContext mfContext = MagneticFieldContext();
+    CalibrationContext calContext = CalibrationContext();
+
+    GX2FFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
+                                  PropagatorPlainOptions(), rSurface);
+
+    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                                Acts::VectorMultiTrajectory{}};
+
+    // Fit the track
+    auto fitRes = xFitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                              kfOptions, tracks);
+
+    auto& track = *fitRes;
+
+    {
+      ObjVisualization3D obj;
+
+      // Draw the track
+      std::cout << "Draw the fitted track" << std::endl;
+      double momentumScale = 10;
+      double localErrorScale = 1000.;
+      double directionErrorScale = 100000;
+
+      ViewConfig scolor({214, 214, 214});
+      ViewConfig mcolor({255, 145, 48});
+      mcolor.offset = -0.01;
+      ViewConfig ppcolor({51, 204, 51});
+      ppcolor.offset = -0.02;
+      ViewConfig fpcolor({255, 255, 0});
+      fpcolor.offset = -0.03;
+      ViewConfig spcolor({0, 125, 255});
+      spcolor.offset = -0.04;
+
+      EventDataView3D::drawMultiTrajectory(
+          obj, tracks.trackStateContainer(), track.tipIndex(), tgContext,
+          momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
+          ppcolor, fpcolor, spcolor);
+
+      obj.write("Fitted_Track_GX2F");
+    }
+  }
   ///^^^^^^^^^^^^^^^^^^^^ WIP ^^^^^^^^^^^^^^^^^^^^
 }
 
