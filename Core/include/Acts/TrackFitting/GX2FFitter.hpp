@@ -44,6 +44,7 @@
 #include <memory>
 
 namespace Acts {
+namespace Experimental {
 
 /// Extension struct which holds delegates to customize the KF behavior
 template <typename traj_t>
@@ -1264,5 +1265,5 @@ class GX2FFitter {
     //  }
 
 };
-
+}  // namespace Experimental
 }  // namespace Acts

@@ -250,7 +250,7 @@ KalmanUpdater kfUpdater;
 KalmanSmoother kfSmoother;
 const FitterTester tester;
 auto makeDefaultGX2FFitterOptions() {
-  GX2FFitterExtensions<VectorMultiTrajectory> extensions;
+  Experimental::GX2FFitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
   extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
@@ -258,7 +258,7 @@ auto makeDefaultGX2FFitterOptions() {
   extensions.smoother
       .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
 
-  return GX2FFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
+  return Experimental::GX2FFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
                              extensions, PropagatorPlainOptions());
 }
 
@@ -468,7 +468,7 @@ BOOST_AUTO_TEST_CASE(WIP) {
     using RecoPropagator = Propagator<RecoStepper, Navigator>;
     RecoPropagator rPropagator(rStepper, rNavigator);
 
-    using GX2FFitter = GX2FFitter<RecoPropagator, VectorMultiTrajectory>;
+    using GX2FFitter = Experimental::GX2FFitter<RecoPropagator, VectorMultiTrajectory>;
 
     GX2FFitter xFitter(rPropagator);
 
@@ -477,7 +477,7 @@ BOOST_AUTO_TEST_CASE(WIP) {
     Acts::GainMatrixUpdater kfUpdater;
     Acts::GainMatrixSmoother kfSmoother;
 
-    GX2FFitterExtensions<VectorMultiTrajectory> extensions;
+    Experimental::GX2FFitterExtensions<VectorMultiTrajectory> extensions;
     extensions.calibrator
         .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
     extensions.updater
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(WIP) {
     MagneticFieldContext mfContext = MagneticFieldContext();
     CalibrationContext calContext = CalibrationContext();
 
-    GX2FFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
+    Experimental::GX2FFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
                                   PropagatorPlainOptions(), rSurface);
 
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
@@ -546,7 +546,7 @@ BOOST_AUTO_TEST_CASE(WIP) {
 //      using KalmanSmoother = Acts::GainMatrixSmoother;
       using GX2FFitter2 =
 //          Acts::GX2FFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
-          Acts::GX2FFitter<RecoPropagator, VectorMultiTrajectory>;
+          Acts::Experimental::GX2FFitter<RecoPropagator, VectorMultiTrajectory>;
 //      const FitterTester tester;
       const auto kfZeroPropagator =
           makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry, 0_T);
