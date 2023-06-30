@@ -245,22 +245,20 @@ static void drawMeasurements(IVisualization3D& helper,
 }
 
 using KalmanUpdater = Acts::GainMatrixUpdater;
-using KalmanSmoother = Acts::GainMatrixSmoother;
 KalmanUpdater kfUpdater;
-KalmanSmoother kfSmoother;
 const FitterTester tester;
-auto makeDefaultGX2FFitterOptions() {
-  Experimental::GX2FFitterExtensions<VectorMultiTrajectory> extensions;
-  extensions.calibrator
-      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
-      &kfUpdater);
-  extensions.smoother
-      .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
 
-  return Experimental::GX2FFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
-                             extensions, PropagatorPlainOptions());
-}
+
+//auto makeDefaultGx2FitterOptions() {
+//  Experimental::GX2FFitterExtensions<VectorMultiTrajectory> extensions;
+//  extensions.calibrator
+//      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+//  extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
+//      &kfUpdater);
+//
+//  return Experimental::Gx2FitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
+//                             extensions, PropagatorPlainOptions());
+//}
 
 BOOST_AUTO_TEST_SUITE(GX2FTest)
 
@@ -475,7 +473,6 @@ BOOST_AUTO_TEST_CASE(WIP) {
     //  auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
 
     Acts::GainMatrixUpdater kfUpdater;
-    Acts::GainMatrixSmoother kfSmoother;
 
     Experimental::GX2FFitterExtensions<VectorMultiTrajectory> extensions;
     extensions.calibrator
@@ -483,84 +480,143 @@ BOOST_AUTO_TEST_CASE(WIP) {
     extensions.updater
         .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
             &kfUpdater);
-    extensions.smoother
-        .connect<&Acts::GainMatrixSmoother::operator()<VectorMultiTrajectory>>(
-            &kfSmoother);
 
     MagneticFieldContext mfContext = MagneticFieldContext();
     CalibrationContext calContext = CalibrationContext();
 
-    Experimental::GX2FFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
-                                  PropagatorPlainOptions(), rSurface);
+    Experimental::Gx2FitterOptions gx2fOptionsTest(tgContext, mfContext, calContext, extensions,
+                                  PropagatorPlainOptions(), rSurface, false,
+                                   false, FreeToBoundCorrection(false), 3);
 
-    Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+    Acts::TrackContainer tracksTest{Acts::VectorTrackContainer{},
                                 Acts::VectorMultiTrajectory{}};
 
     // Fit the track
     auto fitRes = xFitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
-                              kfOptions, tracks);
+                              gx2fOptionsTest, tracksTest);
 
-    auto& track = *fitRes;
+    auto& trackTest = *fitRes;
 
+//    {
+//      ObjVisualization3D obj;
+//
+//      // Draw the track
+//      std::cout << "Draw the fitted track" << std::endl;
+//      double momentumScale = 10;
+//      double localErrorScale = 1000.;
+//      double directionErrorScale = 100000;
+//
+//      ViewConfig scolor({214, 214, 214});
+//      ViewConfig mcolor({255, 145, 48});
+//      mcolor.offset = -0.01;
+//      ViewConfig ppcolor({51, 204, 51});
+//      ppcolor.offset = -0.02;
+//      ViewConfig fpcolor({255, 255, 0});
+//      fpcolor.offset = -0.03;
+//      ViewConfig spcolor({0, 125, 255});
+//      spcolor.offset = -0.04;
+//
+//      EventDataView3D::drawMultiTrajectory(
+//          obj, tracks.trackStateContainer(), track.tipIndex(), tgContext,
+//          momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
+//          ppcolor, fpcolor, spcolor);
+//
+//      std::cout << "tracks.size() = " << tracks.size() << std::endl;
+////      std::cout << "tracks.container() = " << tracks.container() <<
+//      //      std::endl;
+////      std::cout << "tracks.covariance() = " << tracks.covariance() << std::endl;
+////      std::cout << "tracks.parameters() = " << tracks.parameters() << std::endl;
+////      std::cout << "tracks.component() = " << tracks.component() << std::endl;
+//
+//      obj.write("Fitted_Track_GX2F");
+//    }
+
+    // This test checks if the call to the fitter works and no errors occur in the
+    // framework, without fitting and updating any parameters
+//    BOOST_AUTO_TEST_CASE(NoFit)
     {
-      ObjVisualization3D obj;
+      std::cout << "Start test case NoFit" << std::endl;
+      Experimental::Gx2FitterOptions gx2fOptions(tgContext, mfContext, calContext, extensions,
+                                                 PropagatorPlainOptions(), rSurface, false,
+                                                 false, FreeToBoundCorrection(false), 0);
 
-      // Draw the track
-      std::cout << "Draw the fitted track" << std::endl;
-      double momentumScale = 10;
-      double localErrorScale = 1000.;
-      double directionErrorScale = 100000;
+      Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                                  Acts::VectorMultiTrajectory{}};
 
-      ViewConfig scolor({214, 214, 214});
-      ViewConfig mcolor({255, 145, 48});
-      mcolor.offset = -0.01;
-      ViewConfig ppcolor({51, 204, 51});
-      ppcolor.offset = -0.02;
-      ViewConfig fpcolor({255, 255, 0});
-      fpcolor.offset = -0.03;
-      ViewConfig spcolor({0, 125, 255});
-      spcolor.offset = -0.04;
+      // Fit the track
+      auto res = xFitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                                gx2fOptions, tracks);
 
-      EventDataView3D::drawMultiTrajectory(
-          obj, tracks.trackStateContainer(), track.tipIndex(), tgContext,
-          momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
-          ppcolor, fpcolor, spcolor);
+      BOOST_REQUIRE(res.ok());
 
-      std::cout << "tracks.size() = " << tracks.size() << std::endl;
-//      std::cout << "tracks.container() = " << tracks.container() << std::endl;
-//      std::cout << "tracks.covariance() = " << tracks.covariance() << std::endl;
-//      std::cout << "tracks.parameters() = " << tracks.parameters() << std::endl;
-//      std::cout << "tracks.component() = " << tracks.component() << std::endl;
+      auto& track = *res;
 
-      obj.write("Fitted_Track_GX2F");
+      {
+
+//        auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
+//                                               resolutions, rng);
+//
+//        auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+//        BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
+//
+//        // this is the default option. set anyways for consistency
+//        options.referenceSurface = nullptr;
+//
+//        Acts::ConstTrackAccessor<bool> reversed{"reversed"};
+//        Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
+//
+//        auto doTest = [&](bool diag) {
+//          Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+//                                      Acts::VectorMultiTrajectory{}};
+//          if (diag) {
+//            tracks.addColumn<bool>("reversed");
+//            tracks.addColumn<bool>("smoothed");
+//
+//            BOOST_CHECK(tracks.hasColumn("reversed"));
+//            BOOST_CHECK(tracks.hasColumn("smoothed"));
+//          }
+//
+//          const auto track = res.value();
+//          BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+//          BOOST_CHECK(!track.hasReferenceSurface());
+//          BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
+//          BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+//      }
+
+      }
+      std::cout << "Finished test case NoFit" << std::endl;
     }
+
 
 
     /// add some tests. probably need to rewrite to fit for gx2f
 //    BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward)
-    {
-      using ConstantFieldStepper = Acts::EigenStepper<>;
-      using ConstantFieldPropagator =
-          Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
-//      using KalmanUpdater = Acts::GainMatrixUpdater;
-//      using KalmanSmoother = Acts::GainMatrixSmoother;
-      using GX2FFitter2 =
-//          Acts::GX2FFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
-          Acts::Experimental::GX2FFitter<RecoPropagator, VectorMultiTrajectory>;
-//      const FitterTester tester;
-      const auto kfZeroPropagator =
-          makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry, 0_T);
-      const auto kfZero = GX2FFitter2(kfZeroPropagator);
-//      FpeMonitor fpe;
-//      auto start = makeParameters();
-      auto gx2fOptions2 = makeDefaultGX2FFitterOptions();
-
-      bool expected_reversed = false;
-      bool expected_smoothed = false;
-      tester.test_ZeroFieldNoSurfaceForward(kfZero, gx2fOptions2, start, rng,
-                                            expected_reversed, expected_smoothed,
-                                            false);
-    }
+//    {
+//      using ConstantFieldStepper = Acts::EigenStepper<>;
+////      using ConstantFieldStepper = Acts::StraightLineStepper<>;
+//
+//
+//      using ConstantFieldPropagator =
+//          Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
+////      using KalmanUpdater = Acts::GainMatrixUpdater;
+////      using KalmanSmoother = Acts::GainMatrixSmoother;
+//      using GX2FFitter2 =
+////          Acts::GX2FFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
+//          Acts::Experimental::GX2FFitter<RecoPropagator, VectorMultiTrajectory>;
+////      const FitterTester tester;
+//      const auto kfZeroPropagator =
+//          makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry, 0_T);
+//      const auto kfZero = GX2FFitter2(kfZeroPropagator);
+////      FpeMonitor fpe;
+////      auto start = makeParameters();
+//      auto gx2fOptions2 = makeDefaultGX2FFitterOptions();
+//
+//      bool expected_reversed = false;
+//      bool expected_smoothed = false;
+//      tester.test_ZeroFieldNoSurfaceForward(kfZero, gx2fOptions2, start, rng,
+//                                            expected_reversed, expected_smoothed,
+//                                            false);
+//    }
 
   }
   ///^^^^^^^^^^^^^^^^^^^^ WIP ^^^^^^^^^^^^^^^^^^^^
