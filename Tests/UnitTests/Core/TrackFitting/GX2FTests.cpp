@@ -23,7 +23,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
+//#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 //#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 //#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -531,61 +531,7 @@ BOOST_AUTO_TEST_CASE(WIP) {
 //      obj.write("Fitted_Track_GX2F");
 //    }
 
-    // This test checks if the call to the fitter works and no errors occur in the
-    // framework, without fitting and updating any parameters
-//    BOOST_AUTO_TEST_CASE(NoFit)
-    {
-      std::cout << "Start test case NoFit" << std::endl;
-      Experimental::Gx2FitterOptions gx2fOptions(tgContext, mfContext, calContext, extensions,
-                                                 PropagatorPlainOptions(), rSurface, false,
-                                                 false, FreeToBoundCorrection(false), 0);
 
-      Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
-                                  Acts::VectorMultiTrajectory{}};
-
-      // Fit the track
-      auto res = xFitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
-                                gx2fOptions, tracks);
-
-      BOOST_REQUIRE(res.ok());
-
-      auto& track = *res;
-
-      {
-
-//        auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
-//                                               resolutions, rng);
-//
-//        auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
-//        BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
-//
-//        // this is the default option. set anyways for consistency
-//        options.referenceSurface = nullptr;
-//
-//        Acts::ConstTrackAccessor<bool> reversed{"reversed"};
-//        Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
-//
-//        auto doTest = [&](bool diag) {
-//          Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
-//                                      Acts::VectorMultiTrajectory{}};
-//          if (diag) {
-//            tracks.addColumn<bool>("reversed");
-//            tracks.addColumn<bool>("smoothed");
-//
-//            BOOST_CHECK(tracks.hasColumn("reversed"));
-//            BOOST_CHECK(tracks.hasColumn("smoothed"));
-//          }
-//
-//          const auto track = res.value();
-//          BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
-//          BOOST_CHECK(!track.hasReferenceSurface());
-//          BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
-//          BOOST_CHECK_EQUAL(track.nHoles(), 0u);
-//      }
-
-      }
-      std::cout << "Finished test case NoFit" << std::endl;
-    }
 
 
 
@@ -620,6 +566,69 @@ BOOST_AUTO_TEST_CASE(WIP) {
 
   }
   ///^^^^^^^^^^^^^^^^^^^^ WIP ^^^^^^^^^^^^^^^^^^^^
+}
+
+// This test checks if the call to the fitter works and no errors occur in the
+// framework, without fitting and updating any parameters
+BOOST_AUTO_TEST_CASE(NoFit)
+{
+  std::cout << "Start test case NoFit" << std::endl;
+
+  // Context objects
+  Acts::GeometryContext geoCtx;
+  Acts::MagneticFieldContext magCtx;
+  Acts::CalibrationContext calCtx;
+  std::default_random_engine rng(42);
+
+  Detector detector;
+  const size_t nSurfaces = 5;
+  detector.geometry = makeToyDetector(geoCtx, nSurfaces);
+
+  auto start = makeParameters();
+
+  MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
+  MeasurementResolutionMap resolutions = {
+      {Acts::GeometryIdentifier().setVolume(0), resPixel}};
+
+  // propagator
+  using SimPropagator = Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
+                                         resolutions, rng);
+  auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+
+  using GX2FFitter = Experimental::GX2FFitter<SimPropagator, VectorMultiTrajectory>;
+  GX2FFitter Fitter(simPropagator);
+
+  const Surface* rSurface = &start.referenceSurface();
+
+  Experimental::GX2FFitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.updater
+      .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
+          &kfUpdater);
+
+  Experimental::Gx2FitterOptions gx2fOptions(geoCtx, magCtx, calCtx, extensions,
+                                             PropagatorPlainOptions(), rSurface, false,
+                                             false, FreeToBoundCorrection(false), 0);
+
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  // Fit the track
+  auto res = Fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                         gx2fOptions, tracks);
+
+  BOOST_REQUIRE(res.ok());
+
+  auto& track = *res;
+  BOOST_CHECK_EQUAL(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK(!track.hasReferenceSurface());
+  BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
+  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+
+  std::cout << "Finished test case NoFit" << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
