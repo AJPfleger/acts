@@ -212,6 +212,9 @@ struct GX2FFitterResult {
   //  ActsDynamicMatrix covariance;
   //  ActsScalar chisquare = -1;
   //  std::vector<ActsScalar> chisquares;
+
+  // Count how many surfaces have been hit
+  size_t surfaceCount = 0;
 };
 
 //// Construct start track parameters for the fir
@@ -347,7 +350,7 @@ class GX2FFitter {
       if (result.finished) {
         return;
       }
-      std::cout << "dbgActor: 1" << std::endl;
+
       //      ACTS_VERBOSE("GX2FFitter step at pos: "
       //                   << stepper.position(state.stepping).transpose()
       //                   << " dir: " <<
@@ -359,24 +362,28 @@ class GX2FFitter {
       // Add the measurement surface as external surface to navigator.
       // We will try to hit those surface by ignoring boundary checks.
       if constexpr (not isDirectNavigator) {
-        std::cout << "dbgActor: 2a" << std::endl;
+        std::cout << "dbgActor: Add the measurement surface as external surface to navigator" << std::endl;
         if (result.processedStates == 0) {
-          std::cout << "dbgActor: 2b" << std::endl;
+          size_t dbgCountMeasurements = 0;
           for (auto measurementIt = inputMeasurements->begin();
                measurementIt != inputMeasurements->end(); measurementIt++) {
-            std::cout << "dbgActor: 2c" << std::endl;
             navigator.insertExternalSurface(state.navigation,
                                             measurementIt->first);
+            ++dbgCountMeasurements;
           }
-          std::cout << "dbgActor: 2d" << std::endl;
+          std::cout << "dbgActor: dbgCountMeasurements = " << dbgCountMeasurements << std::endl;
         }
       }
-      std::cout << "dbgActor: 3" << std::endl;
+
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
       //      std::string direction = state.stepping.navDir.toString();
       if (surface != nullptr) {
+        ++result.surfaceCount;
+        //check if measurementsurface
+
+
         /// gx2f:
         /// write out jacobian
         /// write out residual
@@ -389,17 +396,24 @@ class GX2FFitter {
         // -> Check outlier behavior, if non-outlier:
         // -> Perform the kalman update
         // -> Fill strack state information & update stepper information
-        std::cout << "Actor: operator(): hit a surface" << std::endl;
+        std::cout << "Actor: operator(): hit surface #" << result.surfaceCount << std::endl;
         //        ACTS_VERBOSE("Perform " << direction << " filter step");
-        std::cout << "dbgActor: 4" << std::endl;
+
         //        auto res = filter(surface, state, stepper, navigator, result);
-        std::cout << "dbgActor: 5" << std::endl;
+
         //        if (!res.ok()) {
         //          std::cout << "dbgActor: 6" << std::endl;
         ////          ACTS_ERROR("Error in " << direction << " filter: " <<
         ///res.error());
         //          result.result = res.error();
         //        }
+
+
+        auto &collectorMeasurements = result.collectorMeasurements;
+        collectorMeasurements.push_back(3);
+//        result.collectorMeasurements.push_back(3);
+//        result.collectorCovariance;
+//        result.collectorJacobians;
       }
 
       // Finalization:
@@ -416,19 +430,12 @@ class GX2FFitter {
             result.fittedStates->getTrackState(result.lastMeasurementIndex);
       }
 
-      /// Somehow this needs fail in the propagation
-      //      if (!state.options.abortList(state, m_stepper, m_navigator,
-      //      result,
-      //                                   logger()))
-
       /// WIP begin
 
       //      // Post-finalization:
       //        ACTS_VERBOSE("Completing with fitted track parameter");
       //        // Transport & bind the parameter to the final surface
-      //        auto res = stepper.boundState(state.stepping, *targetSurface,
-      //        true,
-      //                                      freeToBoundCorrection);
+//      auto res = stepper.boundState(state.stepping, *targetSurface, true, freeToBoundCorrection);
       //        if (!res.ok()) {
       ////          ACTS_ERROR("Error in " << direction << " filter: " <<
       ///res.error());
@@ -441,7 +448,29 @@ class GX2FFitter {
       //        std::get<BoundTrackParameters>(fittedState);
 
       std::cout << "dbgActor: pre-finished" << std::endl;
-      result.finished = true;
+//      if (targetSurface == nullptr) {
+//        // If no target surface provided:
+//        // -> Fitting is finished here
+////          ACTS_VERBOSE(
+////              "No target surface set. Completing without fitted track "
+////              "parameter");
+//          std::cout << "No target surface set. Completing without fitted track parameter" << std::endl;
+//          // Remember the track fitting is done
+//          result.finished = true;
+//        }
+//      else {
+//
+//        std::cout << "wtf" << std::endl;
+//      }
+
+
+//          if (targetReached(state, stepper, navigator, *targetSurface,
+//                        logger())) {
+      if (result.surfaceCount > 4) {
+        result.finished = true;
+      }
+//        result.finished = true;
+//      }
       std::cout << "dbgActor: post-finished" << std::endl;
 
       /// WIP end
@@ -511,6 +540,7 @@ class GX2FFitter {
       auto geoId = sl.geometryId();
       inputMeasurements.emplace(geoId, std::move(sl));
     }
+    std::cout << "inputMeasurements.size() = " << inputMeasurements.size() << std::endl;
 
     /// Fully understand Aborter, Actor, Result later
     // Create the ActionList and AbortList
@@ -558,13 +588,15 @@ class GX2FFitter {
     Acts::CurvilinearTrackParameters params = makeStartParameters();
 
     /// Actual Fitting /////////////////////////////////////////////////////////
-    std::cout << "Start to iterate" << std::endl;
+    std::cout << "\nStart to iterate" << std::endl;
 
     /// Iterate the fit and improve result. Abort after n steps or after
     /// convergence
     for (size_t nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
-      std::cout << "nUpdate = " << nUpdate << "/" << gx2fOptions.nUpdateMax
-                << std::endl;
+      /// update params
+
+      std::cout << "\nnUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
+                << "\n" << std::endl;
 
       /// set up propagator and co
       Acts::GeometryContext geoCtx;
@@ -591,8 +623,6 @@ class GX2FFitter {
       //      options).value(); auto result = m_propagator.propagate(params,
       //      gx2fOptions);
 
-      m_propagator.checkValidity();  /// Just for debugging
-
       typename propagator_t::template action_list_t_result_t<
           CurvilinearTrackParameters, Actors>
           inputResult;
@@ -608,20 +638,15 @@ class GX2FFitter {
       auto result = m_propagator.template propagate(
           sParameters, propagatorOptions, std::move(inputResult));
 
-      // reminder from above
-      //      std::map<GeometryIdentifier, SourceLink> inputMeasurements;
-      //      // for (const auto& sl : sourcelinks) {
-      //      for (; it != end; ++it) {
-      //        SourceLink sl = *it;
-      //        auto geoId = sl.geometryId();
-      //        inputMeasurements.emplace(geoId, std::move(sl));
-      //      }
-
-      /// update params
-
       /// propagate with params and return jacobians, residuals (and chi2)
       // Propagator + Actor (einfacher Jacobian accumulation) [actor vor dem
       // loop allokieren] makeMeasurements umschreiben
+      /// Concept on how to get the parameters back for the next step in the next lines
+      auto& propRes = *result;
+      auto gx2fResult = std::move(propRes.template get<GX2FResult>());
+      std::cout << "gx2fResult.collectorMeasurements.size() = " << gx2fResult.collectorMeasurements.size() << std::endl;
+
+
 
       /// calculate delta params
       /// iterate through jacobians+residuals
