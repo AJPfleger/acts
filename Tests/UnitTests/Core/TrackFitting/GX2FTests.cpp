@@ -244,20 +244,20 @@ static void drawMeasurements(IVisualization3D& helper,
   }
 }
 
-//using KalmanUpdater = Acts::GainMatrixUpdater;
+// using KalmanUpdater = Acts::GainMatrixUpdater;
 const FitterTester tester;
 
-
-//auto makeDefaultGx2FitterOptions() {
-//  Experimental::GX2FFitterExtensions<VectorMultiTrajectory> extensions;
-//  extensions.calibrator
-//      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
-//  extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
-//      &kfUpdater);
+// auto makeDefaultGx2FitterOptions() {
+//   Experimental::GX2FFitterExtensions<VectorMultiTrajectory> extensions;
+//   extensions.calibrator
+//       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+//   extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
+//       &kfUpdater);
 //
-//  return Experimental::Gx2FitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
-//                             extensions, PropagatorPlainOptions());
-//}
+//   return Experimental::Gx2FitterOptions(tester.geoCtx, tester.magCtx,
+//   tester.calCtx,
+//                              extensions, PropagatorPlainOptions());
+// }
 
 BOOST_AUTO_TEST_SUITE(GX2FTest)
 
@@ -460,7 +460,8 @@ BOOST_AUTO_TEST_CASE(WIP) {
     using RecoPropagator = Propagator<RecoStepper, Navigator>;
     RecoPropagator rPropagator(rStepper, rNavigator);
 
-    using GX2FFitter = Experimental::GX2FFitter<RecoPropagator, VectorMultiTrajectory>;
+    using GX2FFitter =
+        Experimental::GX2FFitter<RecoPropagator, VectorMultiTrajectory>;
 
     GX2FFitter xFitter(rPropagator);
 
@@ -468,16 +469,15 @@ BOOST_AUTO_TEST_CASE(WIP) {
     extensions.calibrator
         .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
 
-
     MagneticFieldContext mfContext = MagneticFieldContext();
     CalibrationContext calContext = CalibrationContext();
 
-    Experimental::Gx2FitterOptions gx2fOptionsTest(tgContext, mfContext, calContext, extensions,
-                                  PropagatorPlainOptions(), rSurface, false,
-                                   false, FreeToBoundCorrection(false), 3);
+    Experimental::Gx2FitterOptions gx2fOptionsTest(
+        tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
+        rSurface, false, false, FreeToBoundCorrection(false), 3);
 
     Acts::TrackContainer tracksTest{Acts::VectorTrackContainer{},
-                                Acts::VectorMultiTrajectory{}};
+                                    Acts::VectorMultiTrajectory{}};
 
     // Fit the track
     auto fitRes = xFitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
@@ -485,81 +485,80 @@ BOOST_AUTO_TEST_CASE(WIP) {
 
     auto& trackTest = *fitRes;
 
-//    {
-//      ObjVisualization3D obj;
-//
-//      // Draw the track
-//      std::cout << "Draw the fitted track" << std::endl;
-//      double momentumScale = 10;
-//      double localErrorScale = 1000.;
-//      double directionErrorScale = 100000;
-//
-//      ViewConfig scolor({214, 214, 214});
-//      ViewConfig mcolor({255, 145, 48});
-//      mcolor.offset = -0.01;
-//      ViewConfig ppcolor({51, 204, 51});
-//      ppcolor.offset = -0.02;
-//      ViewConfig fpcolor({255, 255, 0});
-//      fpcolor.offset = -0.03;
-//      ViewConfig spcolor({0, 125, 255});
-//      spcolor.offset = -0.04;
-//
-//      EventDataView3D::drawMultiTrajectory(
-//          obj, tracks.trackStateContainer(), track.tipIndex(), tgContext,
-//          momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
-//          ppcolor, fpcolor, spcolor);
-//
-//      std::cout << "tracks.size() = " << tracks.size() << std::endl;
-////      std::cout << "tracks.container() = " << tracks.container() <<
-//      //      std::endl;
-////      std::cout << "tracks.covariance() = " << tracks.covariance() << std::endl;
-////      std::cout << "tracks.parameters() = " << tracks.parameters() << std::endl;
-////      std::cout << "tracks.component() = " << tracks.component() << std::endl;
-//
-//      obj.write("Fitted_Track_GX2F");
-//    }
-
-
-
-
+    //    {
+    //      ObjVisualization3D obj;
+    //
+    //      // Draw the track
+    //      std::cout << "Draw the fitted track" << std::endl;
+    //      double momentumScale = 10;
+    //      double localErrorScale = 1000.;
+    //      double directionErrorScale = 100000;
+    //
+    //      ViewConfig scolor({214, 214, 214});
+    //      ViewConfig mcolor({255, 145, 48});
+    //      mcolor.offset = -0.01;
+    //      ViewConfig ppcolor({51, 204, 51});
+    //      ppcolor.offset = -0.02;
+    //      ViewConfig fpcolor({255, 255, 0});
+    //      fpcolor.offset = -0.03;
+    //      ViewConfig spcolor({0, 125, 255});
+    //      spcolor.offset = -0.04;
+    //
+    //      EventDataView3D::drawMultiTrajectory(
+    //          obj, tracks.trackStateContainer(), track.tipIndex(), tgContext,
+    //          momentumScale, localErrorScale, directionErrorScale, scolor,
+    //          mcolor, ppcolor, fpcolor, spcolor);
+    //
+    //      std::cout << "tracks.size() = " << tracks.size() << std::endl;
+    ////      std::cout << "tracks.container() = " << tracks.container() <<
+    //      //      std::endl;
+    ////      std::cout << "tracks.covariance() = " << tracks.covariance() <<
+    ///std::endl; /      std::cout << "tracks.parameters() = " <<
+    ///tracks.parameters() << std::endl; /      std::cout << "tracks.component()
+    ///= " << tracks.component() << std::endl;
+    //
+    //      obj.write("Fitted_Track_GX2F");
+    //    }
 
     /// add some tests. probably need to rewrite to fit for gx2f
-//    BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward)
-//    {
-//      using ConstantFieldStepper = Acts::EigenStepper<>;
-////      using ConstantFieldStepper = Acts::StraightLineStepper<>;
-//
-//
-//      using ConstantFieldPropagator =
-//          Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
-////      using KalmanUpdater = Acts::GainMatrixUpdater;
-////      using KalmanSmoother = Acts::GainMatrixSmoother;
-//      using GX2FFitter2 =
-////          Acts::GX2FFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
-//          Acts::Experimental::GX2FFitter<RecoPropagator, VectorMultiTrajectory>;
-////      const FitterTester tester;
-//      const auto kfZeroPropagator =
-//          makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry, 0_T);
-//      const auto kfZero = GX2FFitter2(kfZeroPropagator);
-////      FpeMonitor fpe;
-////      auto start = makeParameters();
-//      auto gx2fOptions2 = makeDefaultGX2FFitterOptions();
-//
-//      bool expected_reversed = false;
-//      bool expected_smoothed = false;
-//      tester.test_ZeroFieldNoSurfaceForward(kfZero, gx2fOptions2, start, rng,
-//                                            expected_reversed, expected_smoothed,
-//                                            false);
-//    }
-
+    //    BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward)
+    //    {
+    //      using ConstantFieldStepper = Acts::EigenStepper<>;
+    ////      using ConstantFieldStepper = Acts::StraightLineStepper<>;
+    //
+    //
+    //      using ConstantFieldPropagator =
+    //          Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
+    ////      using KalmanUpdater = Acts::GainMatrixUpdater;
+    ////      using KalmanSmoother = Acts::GainMatrixSmoother;
+    //      using GX2FFitter2 =
+    ////          Acts::GX2FFitter<ConstantFieldPropagator,
+    ///VectorMultiTrajectory>;
+    //          Acts::Experimental::GX2FFitter<RecoPropagator,
+    //          VectorMultiTrajectory>;
+    ////      const FitterTester tester;
+    //      const auto kfZeroPropagator =
+    //          makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry,
+    //          0_T);
+    //      const auto kfZero = GX2FFitter2(kfZeroPropagator);
+    ////      FpeMonitor fpe;
+    ////      auto start = makeParameters();
+    //      auto gx2fOptions2 = makeDefaultGX2FFitterOptions();
+    //
+    //      bool expected_reversed = false;
+    //      bool expected_smoothed = false;
+    //      tester.test_ZeroFieldNoSurfaceForward(kfZero, gx2fOptions2, start,
+    //      rng,
+    //                                            expected_reversed,
+    //                                            expected_smoothed, false);
+    //    }
   }
   ///^^^^^^^^^^^^^^^^^^^^ WIP ^^^^^^^^^^^^^^^^^^^^
 }
 
 // This test checks if the call to the fitter works and no errors occur in the
 // framework, without fitting and updating any parameters
-BOOST_AUTO_TEST_CASE(NoFit)
-{
+BOOST_AUTO_TEST_CASE(NoFit) {
   std::cout << "Start test case NoFit" << std::endl;
 
   // Context objects
@@ -579,13 +578,15 @@ BOOST_AUTO_TEST_CASE(NoFit)
       {Acts::GeometryIdentifier().setVolume(0), resPixel}};
 
   // propagator
-  using SimPropagator = Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
   SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
   auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                          resolutions, rng);
   auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
 
-  using GX2FFitter = Experimental::GX2FFitter<SimPropagator, VectorMultiTrajectory>;
+  using GX2FFitter =
+      Experimental::GX2FFitter<SimPropagator, VectorMultiTrajectory>;
   GX2FFitter Fitter(simPropagator);
 
   const Surface* rSurface = &start.referenceSurface();
@@ -594,17 +595,16 @@ BOOST_AUTO_TEST_CASE(NoFit)
   extensions.calibrator
       .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
 
-
-  Experimental::Gx2FitterOptions gx2fOptions(geoCtx, magCtx, calCtx, extensions,
-                                             PropagatorPlainOptions(), rSurface, false,
-                                             false, FreeToBoundCorrection(false), 0);
+  Experimental::Gx2FitterOptions gx2fOptions(
+      geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
+      false, false, FreeToBoundCorrection(false), 0);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
   auto res = Fitter.fit(sourceLinks.begin(), sourceLinks.end(), start,
-                         gx2fOptions, tracks);
+                        gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 

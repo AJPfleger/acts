@@ -30,6 +30,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
@@ -42,8 +43,6 @@
 #include <functional>
 #include <map>
 #include <memory>
-
-#include "Acts/Propagator/StraightLineStepper.hpp"
 
 namespace Acts {
 namespace Experimental {
@@ -100,15 +99,15 @@ struct Gx2FitterOptions {
   /// @param eLoss Whether to include energy loss
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
   Gx2FitterOptions(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx,
-                    std::reference_wrapper<const CalibrationContext> cctx,
-                    GX2FFitterExtensions<traj_t> extensions_,
-                    const PropagatorPlainOptions& pOptions,
-                    const Surface* rSurface = nullptr, bool mScattering = false,
-                    bool eLoss = false,
-                    const FreeToBoundCorrection& freeToBoundCorrection_ =
-                        FreeToBoundCorrection(false),
-                    const size_t nUpdateMax_ = 5)
+                   const MagneticFieldContext& mctx,
+                   std::reference_wrapper<const CalibrationContext> cctx,
+                   GX2FFitterExtensions<traj_t> extensions_,
+                   const PropagatorPlainOptions& pOptions,
+                   const Surface* rSurface = nullptr, bool mScattering = false,
+                   bool eLoss = false,
+                   const FreeToBoundCorrection& freeToBoundCorrection_ =
+                       FreeToBoundCorrection(false),
+                   const size_t nUpdateMax_ = 5)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -118,7 +117,7 @@ struct Gx2FitterOptions {
         multipleScattering(mScattering),
         energyLoss(eLoss),
         freeToBoundCorrection(freeToBoundCorrection_),
-        nUpdateMax(nUpdateMax_){}
+        nUpdateMax(nUpdateMax_) {}
 
   /// Contexts are required and the options must not be default-constructible.
   Gx2FitterOptions() = delete;
@@ -252,11 +251,12 @@ Acts::CurvilinearTrackParameters makeStartParameters() {
 /// the propagator.
 ///
 /// The void components are provided mainly for unit testing.
-//template <typename propagator_t, typename traj_t>
+// template <typename propagator_t, typename traj_t>
 template <typename propagator_t, typename traj_t>
 class GX2FFitter {
-/// Instead of template "typename propagator_t"
-//  using propagator_t = Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  /// Instead of template "typename propagator_t"
+  //  using propagator_t = Acts::Propagator<Acts::StraightLineStepper,
+  //  Acts::Navigator>;
   /// The navigator type
   using Gx2fNavigator = typename propagator_t::Navigator;
 
@@ -282,7 +282,6 @@ class GX2FFitter {
 
   const Logger& logger() const { return *m_logger; }
 
-
   /// @brief Propagator Actor plugin for the GX2F
   ///
   /// @tparam parameters_t The type of parameters used for "local" parameters.
@@ -304,10 +303,10 @@ class GX2FFitter {
     const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
 
     /// Whether to consider multiple scattering.
-    bool multipleScattering = false; /// TODO implement later
+    bool multipleScattering = false;  /// TODO implement later
 
     /// Whether to consider energy loss.
-    bool energyLoss = false; /// TODO implement later
+    bool energyLoss = false;  /// TODO implement later
 
     /// Whether to include non-linear correction during global to local
     /// transformation
@@ -342,17 +341,19 @@ class GX2FFitter {
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     const navigator_t& navigator, result_type& result,
                     const Logger& /*logger*/) const {
-//      assert(result.fittedStates && "No MultiTrajectory set");
+      //      assert(result.fittedStates && "No MultiTrajectory set");
 
       std::cout << "Actor: enter operator()" << std::endl;
       if (result.finished) {
         return;
       }
       std::cout << "dbgActor: 1" << std::endl;
-//      ACTS_VERBOSE("GX2FFitter step at pos: "
-//                   << stepper.position(state.stepping).transpose()
-//                   << " dir: " << stepper.direction(state.stepping).transpose()
-//                   << " momentum: " << stepper.momentum(state.stepping));
+      //      ACTS_VERBOSE("GX2FFitter step at pos: "
+      //                   << stepper.position(state.stepping).transpose()
+      //                   << " dir: " <<
+      //                   stepper.direction(state.stepping).transpose()
+      //                   << " momentum: " <<
+      //                   stepper.momentum(state.stepping));
 
       std::cout << "dbgActor: 2" << std::endl;
       // Add the measurement surface as external surface to navigator.
@@ -374,9 +375,8 @@ class GX2FFitter {
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
-//      std::string direction = state.stepping.navDir.toString();
+      //      std::string direction = state.stepping.navDir.toString();
       if (surface != nullptr) {
-
         /// gx2f:
         /// write out jacobian
         /// write out residual
@@ -390,15 +390,16 @@ class GX2FFitter {
         // -> Perform the kalman update
         // -> Fill strack state information & update stepper information
         std::cout << "Actor: operator(): hit a surface" << std::endl;
-//        ACTS_VERBOSE("Perform " << direction << " filter step");
+        //        ACTS_VERBOSE("Perform " << direction << " filter step");
         std::cout << "dbgActor: 4" << std::endl;
-//        auto res = filter(surface, state, stepper, navigator, result);
+        //        auto res = filter(surface, state, stepper, navigator, result);
         std::cout << "dbgActor: 5" << std::endl;
-//        if (!res.ok()) {
-//          std::cout << "dbgActor: 6" << std::endl;
-////          ACTS_ERROR("Error in " << direction << " filter: " << res.error());
-//          result.result = res.error();
-//        }
+        //        if (!res.ok()) {
+        //          std::cout << "dbgActor: 6" << std::endl;
+        ////          ACTS_ERROR("Error in " << direction << " filter: " <<
+        ///res.error());
+        //          result.result = res.error();
+        //        }
       }
 
       // Finalization:
@@ -416,26 +417,28 @@ class GX2FFitter {
       }
 
       /// Somehow this needs fail in the propagation
-//      if (!state.options.abortList(state, m_stepper, m_navigator, result,
-//                                   logger()))
-
-
+      //      if (!state.options.abortList(state, m_stepper, m_navigator,
+      //      result,
+      //                                   logger()))
 
       /// WIP begin
 
-//      // Post-finalization:
-//        ACTS_VERBOSE("Completing with fitted track parameter");
-//        // Transport & bind the parameter to the final surface
-//        auto res = stepper.boundState(state.stepping, *targetSurface, true,
-//                                      freeToBoundCorrection);
-//        if (!res.ok()) {
-////          ACTS_ERROR("Error in " << direction << " filter: " << res.error());
-//          result.result = res.error();
-//          return;
-//        }
-//        auto& fittedState = *res;
-//        // Assign the fitted parameters
-//        result.fittedParameters = std::get<BoundTrackParameters>(fittedState);
+      //      // Post-finalization:
+      //        ACTS_VERBOSE("Completing with fitted track parameter");
+      //        // Transport & bind the parameter to the final surface
+      //        auto res = stepper.boundState(state.stepping, *targetSurface,
+      //        true,
+      //                                      freeToBoundCorrection);
+      //        if (!res.ok()) {
+      ////          ACTS_ERROR("Error in " << direction << " filter: " <<
+      ///res.error());
+      //          result.result = res.error();
+      //          return;
+      //        }
+      //        auto& fittedState = *res;
+      //        // Assign the fitted parameters
+      //        result.fittedParameters =
+      //        std::get<BoundTrackParameters>(fittedState);
 
       std::cout << "dbgActor: pre-finished" << std::endl;
       result.finished = true;
@@ -445,7 +448,6 @@ class GX2FFitter {
       std::cout << "dbgActor: exit" << std::endl;
     }
   };
-
 
   /// Aborter can stay like this probably
   template <typename parameters_t>
@@ -521,102 +523,105 @@ class GX2FFitter {
 
     using PropagatorOptions = Acts::PropagatorOptions<Actors, Aborters>;
 
-//    // Create relevant options for the propagation options
-//    PropagatorOptions<Actors, Aborters> kalmanOptions(
-//        kfOptions.geoContext, kfOptions.magFieldContext);
-//
-//    // Set the trivial propagator options
-//    kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
-//
-//    // Catch the actor and set the measurements
-//    auto& gx2fActor = PropagatorOptions.actionList.template get<GX2FActor>();
-//    gx2fActor.inputMeasurements = &inputMeasurements;
-//    kalmanActor.targetSurface = kfOptions.referenceSurface;
-//    kalmanActor.multipleScattering = kfOptions.multipleScattering;
-//    kalmanActor.energyLoss = kfOptions.energyLoss;
-//    kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
-//    kalmanActor.extensions = kfOptions.extensions;
-//    kalmanActor.actorLogger = m_actorLogger.get();
-
-
+    //    // Create relevant options for the propagation options
+    //    PropagatorOptions<Actors, Aborters> kalmanOptions(
+    //        kfOptions.geoContext, kfOptions.magFieldContext);
+    //
+    //    // Set the trivial propagator options
+    //    kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
+    //
+    //    // Catch the actor and set the measurements
+    //    auto& gx2fActor = PropagatorOptions.actionList.template
+    //    get<GX2FActor>(); gx2fActor.inputMeasurements = &inputMeasurements;
+    //    kalmanActor.targetSurface = kfOptions.referenceSurface;
+    //    kalmanActor.multipleScattering = kfOptions.multipleScattering;
+    //    kalmanActor.energyLoss = kfOptions.energyLoss;
+    //    kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
+    //    kalmanActor.extensions = kfOptions.extensions;
+    //    kalmanActor.actorLogger = m_actorLogger.get();
 
     // Create relevant options for the propagation options
-//    PropagatorOptions<Actors, Aborters> GX2FOptions(kfOptions.geoContext, kfOptions.magFieldContext);
+    //    PropagatorOptions<Actors, Aborters> GX2FOptions(kfOptions.geoContext,
+    //    kfOptions.magFieldContext);
     // Set the trivial propagator options
-//    GX2FOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
+    //    GX2FOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
 
-
-//    std::cout << "dbg11" << std::endl;
-//    typename propagator_t::template action_list_t_result_t<
-//        CurvilinearTrackParameters, Actors>
-//        inputResult;
-//    std::cout << "dbg17" << std::endl;
-//    auto& r = inputResult.template get<GX2FFitterResult<traj_t>>();
-//    std::cout << "dbg16" << std::endl;
-//    r.fittedStates = &trackContainer.trackStateContainer();
+    //    std::cout << "dbg11" << std::endl;
+    //    typename propagator_t::template action_list_t_result_t<
+    //        CurvilinearTrackParameters, Actors>
+    //        inputResult;
+    //    std::cout << "dbg17" << std::endl;
+    //    auto& r = inputResult.template get<GX2FFitterResult<traj_t>>();
+    //    std::cout << "dbg16" << std::endl;
+    //    r.fittedStates = &trackContainer.trackStateContainer();
 
     Acts::CurvilinearTrackParameters params = makeStartParameters();
-
 
     /// Actual Fitting /////////////////////////////////////////////////////////
     std::cout << "Start to iterate" << std::endl;
 
-    /// Iterate the fit and improve result. Abort after n steps or after convergence
+    /// Iterate the fit and improve result. Abort after n steps or after
+    /// convergence
     for (size_t nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
-      std::cout << "nUpdate = " << nUpdate << "/" << gx2fOptions.nUpdateMax << std::endl;
+      std::cout << "nUpdate = " << nUpdate << "/" << gx2fOptions.nUpdateMax
+                << std::endl;
 
       /// set up propagator and co
       Acts::GeometryContext geoCtx;
       Acts::MagneticFieldContext magCtx;
       // Set options for propagator
-      Acts::PropagatorOptions<Actors, Aborters> propagatorOptions(geoCtx, magCtx);
+      Acts::PropagatorOptions<Actors, Aborters> propagatorOptions(geoCtx,
+                                                                  magCtx);
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
-//      auto& creator = propagatorOptions.actionList.get<MeasurementsCreator>();
+      //      auto& creator =
+      //      propagatorOptions.actionList.get<MeasurementsCreator>();
 
-//      typename propagator_t propagator;
+      //      typename propagator_t propagator;
       // ? aleready defined as m_propagator ?
 
-      ///rewrite
-//        auto& preFitter = options.actionList.get<GX2FActor>();
-//        preFitter.resolutions = resolutions;
-//        preFitter.rng = &rng;
-//        preFitter.sourceId = sourceId;
-//
-//      // Launch and collect the measurements
-//      auto result = m_propagator.propagate(trackParameters, options).value();
-//      auto result = m_propagator.propagate(params, gx2fOptions);
+      /// rewrite
+      //        auto& preFitter = options.actionList.get<GX2FActor>();
+      //        preFitter.resolutions = resolutions;
+      //        preFitter.rng = &rng;
+      //        preFitter.sourceId = sourceId;
+      //
+      //      // Launch and collect the measurements
+      //      auto result = m_propagator.propagate(trackParameters,
+      //      options).value(); auto result = m_propagator.propagate(params,
+      //      gx2fOptions);
 
-      m_propagator.checkValidity(); /// Just for debugging
-
+      m_propagator.checkValidity();  /// Just for debugging
 
       typename propagator_t::template action_list_t_result_t<
           CurvilinearTrackParameters, Actors>
           inputResult;
       std::cout << "dbg11" << std::endl;
       auto& r = inputResult.template get<GX2FFitterResult<traj_t>>();
-          std::cout << "dbg16" << std::endl;
+      std::cout << "dbg16" << std::endl;
       r.fittedStates = &trackContainer.trackStateContainer();
-//
-//      auto result = m_propagator.template propagate(sParameters, propagatorOptions,
-//                                                    std::move(inputResult));
+      //
+      //      auto result = m_propagator.template propagate(sParameters,
+      //      propagatorOptions,
+      //                                                    std::move(inputResult));
 
-      auto result = m_propagator.template propagate(sParameters, propagatorOptions, std::move(inputResult));
+      auto result = m_propagator.template propagate(
+          sParameters, propagatorOptions, std::move(inputResult));
 
-
-      //reminder from above
-//      std::map<GeometryIdentifier, SourceLink> inputMeasurements;
-//      // for (const auto& sl : sourcelinks) {
-//      for (; it != end; ++it) {
-//        SourceLink sl = *it;
-//        auto geoId = sl.geometryId();
-//        inputMeasurements.emplace(geoId, std::move(sl));
-//      }
+      // reminder from above
+      //      std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+      //      // for (const auto& sl : sourcelinks) {
+      //      for (; it != end; ++it) {
+      //        SourceLink sl = *it;
+      //        auto geoId = sl.geometryId();
+      //        inputMeasurements.emplace(geoId, std::move(sl));
+      //      }
 
       /// update params
 
       /// propagate with params and return jacobians, residuals (and chi2)
-      // Propagator + Actor (einfacher Jacobian accumulation) [actor vor dem loop allokieren] makeMeasurements umschreiben
+      // Propagator + Actor (einfacher Jacobian accumulation) [actor vor dem
+      // loop allokieren] makeMeasurements umschreiben
 
       /// calculate delta params
       /// iterate through jacobians+residuals
@@ -630,59 +635,59 @@ class GX2FFitter {
     /// Finish Fitting /////////////////////////////////////////////////////////
     /// Calculate covariance with inverse of a
 
-
     std::cout << "dbg12" << std::endl;
 
+    //    std::cout << "dbg18" << std::endl;
+    //    if (!result.ok()) {
+    //      ACTS_ERROR("Propagation failed: " << result.error());
+    //      return result.error();
+    //    }
+    //
+    //    std::cout << "dbg14" << std::endl;
+    //
+    //    auto& propRes = *result;
+    //
+    //    /// Get the result of the fit
+    //    auto gx2fResult = std::move(propRes.template get<GX2FResult>());
+    //
+    //    /// It could happen that the fit ends in zero measurement states.
+    //    /// The result gets meaningless so such case is regarded as fit
+    //    failure. if (gx2fResult.result.ok() and not
+    //    gx2fResult.measurementStates) {
+    //      gx2fResult.result =
+    //      Result<void>(KalmanFitterError::NoMeasurementFound);
+    //    }
+    //
+    //    if (!gx2fResult.result.ok()) {
+    //      ACTS_ERROR("KalmanFilter failed: "
+    //                 << gx2fResult.result.error() << ", "
+    //                 << gx2fResult.result.error().message());
+    //      return gx2fResult.result.error();
+    //    }
 
-//    std::cout << "dbg18" << std::endl;
-//    if (!result.ok()) {
-//      ACTS_ERROR("Propagation failed: " << result.error());
-//      return result.error();
-//    }
-//
-//    std::cout << "dbg14" << std::endl;
-//
-//    auto& propRes = *result;
-//
-//    /// Get the result of the fit
-//    auto gx2fResult = std::move(propRes.template get<GX2FResult>());
-//
-//    /// It could happen that the fit ends in zero measurement states.
-//    /// The result gets meaningless so such case is regarded as fit failure.
-//    if (gx2fResult.result.ok() and not gx2fResult.measurementStates) {
-//      gx2fResult.result = Result<void>(KalmanFitterError::NoMeasurementFound);
-//    }
-//
-//    if (!gx2fResult.result.ok()) {
-//      ACTS_ERROR("KalmanFilter failed: "
-//                 << gx2fResult.result.error() << ", "
-//                 << gx2fResult.result.error().message());
-//      return gx2fResult.result.error();
-//    }
-
-/// Prepare track for return
+    /// Prepare track for return
     std::cout << "dbg13" << std::endl;
     auto track = trackContainer.getTrack(trackContainer.addTrack());
     std::cout << "dbg1" << std::endl;
-//    track.tipIndex() = gx2fResult.lastMeasurementIndex;
-//    std::cout << "dbg2" << std::endl;
-//    if (gx2fResult.fittedParameters) {
-//      std::cout << "dbg3" << std::endl;
-//      const auto& params = gx2fResult.fittedParameters.value();
-//      std::cout << "dbg4" << std::endl;
-//      track.parameters() = params.parameters();
-//      std::cout << "dbg5" << std::endl;
-//      track.covariance() = params.covariance().value();
-//      std::cout << "dbg6" << std::endl;
-//      track.setReferenceSurface(params.referenceSurface().getSharedPtr());
-//    }
-//    std::cout << "dbg7" << std::endl;
-//    track.nMeasurements() = gx2fResult.measurementStates;
-//    std::cout << "dbg8" << std::endl;
-//    track.nHoles() = gx2fResult.measurementHoles;
-//    std::cout << "dbg9" << std::endl;
-//    calculateTrackQuantities(track);
-//    std::cout << "dbg10" << std::endl;
+    //    track.tipIndex() = gx2fResult.lastMeasurementIndex;
+    //    std::cout << "dbg2" << std::endl;
+    //    if (gx2fResult.fittedParameters) {
+    //      std::cout << "dbg3" << std::endl;
+    //      const auto& params = gx2fResult.fittedParameters.value();
+    //      std::cout << "dbg4" << std::endl;
+    //      track.parameters() = params.parameters();
+    //      std::cout << "dbg5" << std::endl;
+    //      track.covariance() = params.covariance().value();
+    //      std::cout << "dbg6" << std::endl;
+    //      track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+    //    }
+    //    std::cout << "dbg7" << std::endl;
+    //    track.nMeasurements() = gx2fResult.measurementStates;
+    //    std::cout << "dbg8" << std::endl;
+    //    track.nHoles() = gx2fResult.measurementHoles;
+    //    std::cout << "dbg9" << std::endl;
+    //    calculateTrackQuantities(track);
+    //    std::cout << "dbg10" << std::endl;
 
     // Return the converted Track
     return track;
