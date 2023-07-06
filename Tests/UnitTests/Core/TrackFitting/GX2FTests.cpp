@@ -244,8 +244,7 @@ static void drawMeasurements(IVisualization3D& helper,
   }
 }
 
-using KalmanUpdater = Acts::GainMatrixUpdater;
-KalmanUpdater kfUpdater;
+//using KalmanUpdater = Acts::GainMatrixUpdater;
 const FitterTester tester;
 
 
@@ -371,7 +370,7 @@ BOOST_AUTO_TEST_CASE(WIP) {
   }
 
   std::cout << "\n*** Start fitting ***\n" << std::endl;
-
+  std::cout << "\n*** Start fitting -> Kalman ***\n" << std::endl;
   /// KalmanFitter
   {
     const Surface* rSurface = &start.referenceSurface();
@@ -392,17 +391,12 @@ BOOST_AUTO_TEST_CASE(WIP) {
 
     KalmanFitter kFitter(rPropagator);
 
-    //  auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
-
-    Acts::GainMatrixUpdater kfUpdater;
     Acts::GainMatrixSmoother kfSmoother;
 
     KalmanFitterExtensions<VectorMultiTrajectory> extensions;
     extensions.calibrator
         .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
-    extensions.updater
-        .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
-            &kfUpdater);
+
     extensions.smoother
         .connect<&Acts::GainMatrixSmoother::operator()<VectorMultiTrajectory>>(
             &kfSmoother);
@@ -449,7 +443,7 @@ BOOST_AUTO_TEST_CASE(WIP) {
       obj.write("Fitted_Track_KF");
     }
   }
-
+  std::cout << "\n*** Start fitting -> GX2F ***\n" << std::endl;
   /// GX2FFitter
   {
     const Surface* rSurface = &start.referenceSurface();
@@ -470,16 +464,10 @@ BOOST_AUTO_TEST_CASE(WIP) {
 
     GX2FFitter xFitter(rPropagator);
 
-    //  auto logger = getDefaultLogger("KalmanFilter", Logging::WARNING);
-
-    Acts::GainMatrixUpdater kfUpdater;
-
     Experimental::GX2FFitterExtensions<VectorMultiTrajectory> extensions;
     extensions.calibrator
         .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
-    extensions.updater
-        .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
-            &kfUpdater);
+
 
     MagneticFieldContext mfContext = MagneticFieldContext();
     CalibrationContext calContext = CalibrationContext();
@@ -605,9 +593,7 @@ BOOST_AUTO_TEST_CASE(NoFit)
   Experimental::GX2FFitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
-  extensions.updater
-      .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
-          &kfUpdater);
+
 
   Experimental::Gx2FitterOptions gx2fOptions(geoCtx, magCtx, calCtx, extensions,
                                              PropagatorPlainOptions(), rSurface, false,
