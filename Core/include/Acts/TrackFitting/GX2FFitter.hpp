@@ -402,7 +402,6 @@ class GX2FFitter {
                       << std::endl;
             return;
           }
-
           auto& [boundParams, jacobian, pathLength] = *res;
 
           // add a full TrackState entry multi trajectory
@@ -413,12 +412,21 @@ class GX2FFitter {
 
           // now get track state proxy back
           auto trackStateProxy = fittedStates.getTrackState(newTrackIndex);
+//          auto trackStateProxy = fittedStates.getTrackState(result.lastTrackIndex);
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
           // assign the source link to the track state
           trackStateProxy.setUncalibratedSourceLink(sourcelink_it->second);
 
           // Fill the track state
           trackStateProxy.predicted() = std::move(boundParams.parameters());
+          std::cout << "trackStateProxy.predicted():\n" << trackStateProxy.predicted() << "\n" << std::endl;
+          std::cout << "trackStateProxy.hasUncalibratedSourceLink():\n" << trackStateProxy.hasUncalibratedSourceLink() << "\n" << std::endl;
+
+//          extensions.calibrator(state.geoContext, trackStateProxy);
+
+//          std::cout << "trackStateProxy.calibrated():\n" << trackStateProxy.hasCalibrated << "\n" << std::endl;
+
+//          std::cout << "sourcelink_it.parameters() = " << sourcelink_it.parameters() << std::endl;
 
           if (boundParams.covariance().has_value()) {
 
@@ -689,12 +697,23 @@ class GX2FFitter {
                               << " input measurements");
     std::map<GeometryIdentifier, SourceLink> inputMeasurements;
     // for (const auto& sl : sourcelinks) {
+    GeometryIdentifier testGeoId;
     for (; it != end; ++it) {
       SourceLink sl = *it;
+      std::cout << "check source links:" << std::endl;
+      std::cout << "sl.geometryId() = " << sl.geometryId() << std::endl;
+      auto getIt = sl.get<Test::TestSourceLink>();
+      std::cout << "copied well" << std::endl;
+      std::cout << "sl.get() = " << getIt.parameters << std::endl;
       auto geoId = sl.geometryId();
+      testGeoId = geoId;
       inputMeasurements.emplace(geoId, std::move(sl));
     }
     std::cout << "inputMeasurements.size() = " << inputMeasurements.size() << std::endl;
+//    for (const auto &p : inputMeasurements) {
+//      std::cout << "inputMeasurements.map-loop = " << p.second.geometryId() << std::endl;
+//    }
+
 
     /// Fully understand Aborter, Actor, Result later
     // Create the ActionList and AbortList
