@@ -197,8 +197,10 @@ struct GX2FFitterResult {
 
   // collectors
   std::vector<ActsScalar> collectorMeasurements;
-  std::vector<ActsScalar> collectorResiduals;
-  std::vector<ActsScalar> collectorCovariance;
+//  std::vector<ActsScalar> collectorResiduals;
+  std::vector<ActsVector<2>> collectorResiduals;
+//  std::vector<std::vector<ActsScalar>> collectorCovariance;
+  std::vector<ActsSymMatrix<2>> collectorCovariance;
   std::vector<BoundMatrix> collectorJacobians;
 
   // first derivative of chi2 wrt starting track parameters
@@ -230,8 +232,8 @@ Acts::CurvilinearTrackParameters makeStartParameters() {
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
   Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
-  Acts::Vector4 mPos4(0., 0., 0., 42_ns);
-  return Acts::CurvilinearTrackParameters(mPos4, 0_degree, 90_degree, 1_GeV,
+  Acts::Vector4 mPos4(1., 1., 1., 42_ns);
+  return Acts::CurvilinearTrackParameters(mPos4, 20_degree, 70_degree, 1_GeV,
                                           1_e, cov);
 };
 
@@ -404,6 +406,14 @@ class GX2FFitter {
           }
           auto& [boundParams, jacobian, pathLength] = *res;
 
+          // get measurement
+          auto sl = sourcelink_it->second;
+          auto uncalibratedMeasurement = sl.template get<Test::TestSourceLink>().parameters;
+          auto uncalibratedCovarianceMeasurement =  sl.template get<Test::TestSourceLink>().covariance;
+
+          auto measurement = uncalibratedMeasurement;
+          auto covarianceMeasurement = uncalibratedCovarianceMeasurement;
+
           // add a full TrackState entry multi trajectory
           // (this allocates storage for all components, we will set them later)
           auto fittedStates = *result.fittedStates;
@@ -419,14 +429,26 @@ class GX2FFitter {
 
           // Fill the track state
           trackStateProxy.predicted() = std::move(boundParams.parameters());
-          std::cout << "trackStateProxy.predicted():\n" << trackStateProxy.predicted() << "\n" << std::endl;
-          std::cout << "trackStateProxy.hasUncalibratedSourceLink():\n" << trackStateProxy.hasUncalibratedSourceLink() << "\n" << std::endl;
-
+          auto predicted = trackStateProxy.predicted();
+//          std::cout << "trackStateProxy.predicted():\n" << predicted << "\n" << std::endl;
+//          std::cout << "trackStateProxy.hasUncalibratedSourceLink():\n" << trackStateProxy.hasUncalibratedSourceLink() << "\n" << std::endl;
+//          std::cout << "sourcelink_it.get() =\n" << measurement << std::endl;
 //          extensions.calibrator(state.geoContext, trackStateProxy);
 
 //          std::cout << "trackStateProxy.calibrated():\n" << trackStateProxy.hasCalibrated << "\n" << std::endl;
 
 //          std::cout << "sourcelink_it.parameters() = " << sourcelink_it.parameters() << std::endl;
+
+
+          /// calculate residuals and covariances
+          ActsVector<2> residual;
+//          std::vector<ActsScalar> covDiagonal;
+          for(long i=0; i<measurement.size(); i++){
+            residual[i] = measurement[i] - predicted[i];
+//            covDiagonal.push_back(measurement[i] - predicted[i]);
+          }
+          result.collectorResiduals.push_back(residual);
+          result.collectorCovariance.push_back(covarianceMeasurement);
 
           if (boundParams.covariance().has_value()) {
 
@@ -572,8 +594,6 @@ class GX2FFitter {
 
 
         result.collectorMeasurements.push_back(state.stepping.pathAccumulated); /// placeholder
-//        result.collectorResiduals.push_back(3);
-//        result.collectorCovariance.push_back(3);
         result.collectorJacobians.push_back(state.stepping.jacobian);
       }
 
@@ -700,13 +720,11 @@ class GX2FFitter {
     GeometryIdentifier testGeoId;
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      std::cout << "check source links:" << std::endl;
-      std::cout << "sl.geometryId() = " << sl.geometryId() << std::endl;
-      auto getIt = sl.get<Test::TestSourceLink>();
-      std::cout << "copied well" << std::endl;
-      std::cout << "sl.get() = " << getIt.parameters << std::endl;
+//      std::cout << "check source links:" << std::endl;
+//      std::cout << "sl.geometryId() = " << sl.geometryId() << std::endl;
+//      std::cout << "sl.get<>() =\n" << sl.get<Test::TestSourceLink>().parameters << std::endl;
       auto geoId = sl.geometryId();
-      testGeoId = geoId;
+//      testGeoId = geoId;
       inputMeasurements.emplace(geoId, std::move(sl));
     }
     std::cout << "inputMeasurements.size() = " << inputMeasurements.size() << std::endl;
@@ -759,6 +777,9 @@ class GX2FFitter {
     //    r.fittedStates = &trackContainer.trackStateContainer();
 
     Acts::CurvilinearTrackParameters params = makeStartParameters();
+    BoundVector deltaParams = BoundVector::Zero();
+
+    std::cout << "params" << params << std::endl;
 
     /// Actual Fitting /////////////////////////////////////////////////////////
     std::cout << "\nStart to iterate" << std::endl;
@@ -770,7 +791,8 @@ class GX2FFitter {
 
       std::cout << "\nnUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
                 << "\n" << std::endl;
-
+      params.parameters() += deltaParams;
+      std::cout << "updated params" << params << std::endl;
       /// set up propagator and co
       Acts::GeometryContext geoCtx;
       Acts::MagneticFieldContext magCtx;
@@ -823,10 +845,69 @@ class GX2FFitter {
       }
       std::cout << std::endl;
 
+      std::cout << "gx2fResult.collectorResiduals.size() = " << gx2fResult.collectorResiduals.size() << std::endl;
+      for (auto vec : gx2fResult.collectorResiduals){
+        for (auto s : vec){
+          std::cout << s << ", ";
+        }
+        std::cout << "\n" << std::endl;
+      }
+      std::cout << std::endl;
+
+      std::cout << "gx2fResult.collectorCovariance.size() = " << gx2fResult.collectorCovariance.size() << std::endl;
+      for (auto s : gx2fResult.collectorCovariance){
+        std::cout << s(0,0) << ", " << s(0,1) << ", " << s(1,0) << ", " << s(1,1) << "\n";
+      }
+      std::cout << std::endl;
+
 //      std::cout << "gx2fResult.collectorJacobians.size() = " << gx2fResult.collectorJacobians.size() << std::endl;
 //      for (auto s : gx2fResult.collectorJacobians){
 //        std::cout << s << "\n" << std::endl;
 //      }
+
+
+      double chi2sum = 0;
+      BoundMatrix aMatrix = BoundMatrix::Zero();
+      BoundVector bVector = BoundVector::Zero();
+
+
+      for (int iMeas=0; iMeas < gx2fResult.collectorResiduals.size(); iMeas++){
+        ActsMatrix<2, eBoundSize> proj;
+
+        for (int i_ = 0; i_<2;i_++){
+          for (int j_ = 0; j_<eBoundSize;j_++){
+            proj(i_,j_) = 0;
+          }
+        }
+        proj(0,0) = 1;
+        proj(1,1) = 1;
+
+//        std::cout << "proj = " << proj << std::endl;
+
+        const auto ri = gx2fResult.collectorResiduals[iMeas];
+        const auto covi = gx2fResult.collectorCovariance[iMeas];
+        const auto coviInv = covi.inverse();
+        const auto projectedJacobian = proj * gx2fResult.collectorJacobians[iMeas];
+
+//        std::cout << "projectedJacobian = " << projectedJacobian << std::endl;
+
+        const double chi2meas = (ri.transpose() * coviInv * ri).eval()(0);
+//        std::cout << "chi2meas = " << chi2meas << std::endl;
+        const BoundMatrix aMatrixMeas = projectedJacobian.transpose() * coviInv * projectedJacobian;
+//        std::cout << "aMatrixMeas = " << aMatrixMeas << std::endl;
+        const BoundVector bVectorMeas = projectedJacobian.transpose() * coviInv * ri;
+//        std::cout << "bVectorMeas = " << bVectorMeas << std::endl;
+        chi2sum += chi2meas;
+        aMatrix += aMatrixMeas;
+        bVector += bVectorMeas;
+      }
+
+      std::cout << "chi2sum = " << chi2sum << std::endl;
+      std::cout << "aMatrix = " << aMatrix << std::endl;
+      std::cout << "bVector = " << bVector << std::endl;
+      deltaParams = aMatrix.colPivHouseholderQr().solve(bVector);
+      std::cout << "deltaParams = " << deltaParams << std::endl;
+
 
 
       /// calculate delta params
