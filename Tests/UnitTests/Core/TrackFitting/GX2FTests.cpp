@@ -513,9 +513,9 @@ BOOST_AUTO_TEST_CASE(WIP) {
     ////      std::cout << "tracks.container() = " << tracks.container() <<
     //      //      std::endl;
     ////      std::cout << "tracks.covariance() = " << tracks.covariance() <<
-    ///std::endl; /      std::cout << "tracks.parameters() = " <<
-    ///tracks.parameters() << std::endl; /      std::cout << "tracks.component()
-    ///= " << tracks.component() << std::endl;
+    /// std::endl; /      std::cout << "tracks.parameters() = " <<
+    /// tracks.parameters() << std::endl; /      std::cout <<
+    /// "tracks.component() = " << tracks.component() << std::endl;
     //
     //      obj.write("Fitted_Track_GX2F");
     //    }
@@ -533,7 +533,7 @@ BOOST_AUTO_TEST_CASE(WIP) {
     ////      using KalmanSmoother = Acts::GainMatrixSmoother;
     //      using GX2FFitter2 =
     ////          Acts::GX2FFitter<ConstantFieldPropagator,
-    ///VectorMultiTrajectory>;
+    /// VectorMultiTrajectory>;
     //          Acts::Experimental::GX2FFitter<RecoPropagator,
     //          VectorMultiTrajectory>;
     ////      const FitterTester tester;

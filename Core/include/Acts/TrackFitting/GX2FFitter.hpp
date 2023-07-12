@@ -197,9 +197,9 @@ struct GX2FFitterResult {
 
   // collectors
   std::vector<ActsScalar> collectorMeasurements;
-//  std::vector<ActsScalar> collectorResiduals;
+  //  std::vector<ActsScalar> collectorResiduals;
   std::vector<ActsVector<2>> collectorResiduals;
-//  std::vector<std::vector<ActsScalar>> collectorCovariance;
+  //  std::vector<std::vector<ActsScalar>> collectorCovariance;
   std::vector<ActsSymMatrix<2>> collectorCovariance;
   std::vector<BoundMatrix> collectorJacobians;
 
@@ -360,20 +360,21 @@ class GX2FFitter {
       //                   << " momentum: " <<
       //                   stepper.momentum(state.stepping));
 
-      std::cout << "dbgActor: 2" << std::endl;
       // Add the measurement surface as external surface to navigator.
       // We will try to hit those surface by ignoring boundary checks.
       if constexpr (not isDirectNavigator) {
-        std::cout << "dbgActor: Add the measurement surface as external surface to navigator" << std::endl;
+        //        std::cout << "dbgActor: Add the measurement surface as
+        //        external surface to navigator" << std::endl;
         if (result.processedStates == 0) {
-          size_t dbgCountMeasurements = 0;
+          //          size_t dbgCountMeasurements = 0;
           for (auto measurementIt = inputMeasurements->begin();
                measurementIt != inputMeasurements->end(); measurementIt++) {
             navigator.insertExternalSurface(state.navigation,
                                             measurementIt->first);
-            ++dbgCountMeasurements;
+            //            ++dbgCountMeasurements;
           }
-          std::cout << "dbgActor: dbgCountMeasurements = " << dbgCountMeasurements << std::endl;
+          //          std::cout << "dbgActor: dbgCountMeasurements = " <<
+          //          dbgCountMeasurements << std::endl;
         }
       }
 
@@ -383,20 +384,26 @@ class GX2FFitter {
       //      std::string direction = state.stepping.navDir.toString();
       if (surface != nullptr) {
         ++result.surfaceCount;
-        std::cout << "Measurement surface " << surface->geometryId() << " detected." << std::endl;
-        //check if measurementsurface
+        std::cout << "Measurement surface " << surface->geometryId()
+                  << " detected." << std::endl;
+        // check if measurement surface
 
         auto sourcelink_it = inputMeasurements->find(surface->geometryId());
-        /// ignore this terminator for now, because it is not reliabale
-//        if (sourcelink_it == inputMeasurements->end() && result.surfaceCount > 1) {
-////          ACTS_VERBOSE("Measurement surface " << surface->geometryId()
-////                                              << " detected.");
-//          std::cout << "dbgActor: Last measurement detected, finish now" << std::endl;
-//          result.finished = true;
-//        }
+        /// ignore this terminator for now, because it is not reliable
+        //        if (sourcelink_it == inputMeasurements->end() &&
+        //        result.surfaceCount > 1) {
+        ////          ACTS_VERBOSE("Measurement surface " <<
+        ///surface->geometryId() / << " detected.");
+        //          std::cout << "dbgActor: Last measurement detected, finish
+        //          now" << std::endl; result.finished = true;
+        //        }
 
         if (sourcelink_it != inputMeasurements->end()) {
-          // skipped: stepper.transportCovarianceToBound(state.stepping, *surface, freeToBoundCorrection); skipped: materialInteractor(surface, state, stepper, navigator, MaterialUpdateStage::PreUpdate); Bind the transported state to the current surface
+          // skipped: stepper.transportCovarianceToBound(state.stepping,
+          // *surface, freeToBoundCorrection); skipped:
+          // materialInteractor(surface, state, stepper, navigator,
+          // MaterialUpdateStage::PreUpdate); Bind the transported state to the
+          // current surface
           auto res = stepper.boundState(state.stepping, *surface, false,
                                         freeToBoundCorrection);
           if (!res.ok()) {
@@ -408,8 +415,10 @@ class GX2FFitter {
 
           // get measurement
           auto sl = sourcelink_it->second;
-          auto uncalibratedMeasurement = sl.template get<Test::TestSourceLink>().parameters;
-          auto uncalibratedCovarianceMeasurement =  sl.template get<Test::TestSourceLink>().covariance;
+          auto uncalibratedMeasurement =
+              sl.template get<Test::TestSourceLink>().parameters;
+          auto uncalibratedCovarianceMeasurement =
+              sl.template get<Test::TestSourceLink>().covariance;
 
           auto measurement = uncalibratedMeasurement;
           auto covarianceMeasurement = uncalibratedCovarianceMeasurement;
@@ -422,7 +431,8 @@ class GX2FFitter {
 
           // now get track state proxy back
           auto trackStateProxy = fittedStates.getTrackState(newTrackIndex);
-//          auto trackStateProxy = fittedStates.getTrackState(result.lastTrackIndex);
+          //          auto trackStateProxy =
+          //          fittedStates.getTrackState(result.lastTrackIndex);
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
           // assign the source link to the track state
           trackStateProxy.setUncalibratedSourceLink(sourcelink_it->second);
@@ -430,28 +440,27 @@ class GX2FFitter {
           // Fill the track state
           trackStateProxy.predicted() = std::move(boundParams.parameters());
           auto predicted = trackStateProxy.predicted();
-//          std::cout << "trackStateProxy.predicted():\n" << predicted << "\n" << std::endl;
-//          std::cout << "trackStateProxy.hasUncalibratedSourceLink():\n" << trackStateProxy.hasUncalibratedSourceLink() << "\n" << std::endl;
-//          std::cout << "sourcelink_it.get() =\n" << measurement << std::endl;
-//          extensions.calibrator(state.geoContext, trackStateProxy);
+          //          std::cout << "trackStateProxy.predicted():\n" << predicted << "\n" << std::endl;
+          //          std::cout << "trackStateProxy.hasUncalibratedSourceLink():\n" << trackStateProxy.hasUncalibratedSourceLink() << "\n" << std::endl;
+          //          std::cout << "sourcelink_it.get() =\n" << measurement << std::endl;
+          //          extensions.calibrator(state.geoContext, trackStateProxy);
 
-//          std::cout << "trackStateProxy.calibrated():\n" << trackStateProxy.hasCalibrated << "\n" << std::endl;
+          //          std::cout << "trackStateProxy.calibrated():\n" << trackStateProxy.hasCalibrated << "\n" << std::endl;
 
-//          std::cout << "sourcelink_it.parameters() = " << sourcelink_it.parameters() << std::endl;
-
+          //          std::cout << "sourcelink_it.parameters() = " <<
+          //          sourcelink_it.parameters() << std::endl;
 
           /// calculate residuals and covariances
           ActsVector<2> residual;
-//          std::vector<ActsScalar> covDiagonal;
-          for(long i=0; i<measurement.size(); i++){
+          //          std::vector<ActsScalar> covDiagonal;
+          for (long i = 0; i < measurement.size(); i++) {
             residual[i] = measurement[i] - predicted[i];
-//            covDiagonal.push_back(measurement[i] - predicted[i]);
+            //            covDiagonal.push_back(measurement[i] - predicted[i]);
           }
           result.collectorResiduals.push_back(residual);
           result.collectorCovariance.push_back(covarianceMeasurement);
 
           if (boundParams.covariance().has_value()) {
-
             trackStateProxy.predictedCovariance() =
                 std::move(*boundParams.covariance());
           }
@@ -460,9 +469,9 @@ class GX2FFitter {
 
           trackStateProxy.pathLength() = std::move(pathLength);
 
-          // We have predicted parameters, so calibrate the uncalibrated input measurement
-          // skipped: extensions.calibrator(state.geoContext, trackStateProxy);
-          // Get and set the type flags
+          // We have predicted parameters, so calibrate the uncalibrated input
+          // measurement skipped: extensions.calibrator(state.geoContext,
+          // trackStateProxy); Get and set the type flags
           auto typeFlags = trackStateProxy.typeFlags();
           typeFlags.set(TrackStateFlag::ParameterFlag);
           if (surface->surfaceMaterial() != nullptr) {
@@ -472,59 +481,68 @@ class GX2FFitter {
           // skipped check if outlier
 
           /// WIP vvv
-          std::cout << "*** outside visit_measurement lambda *** " << trackStateProxy.calibratedSize() << std::endl;
-//          visit_measurement(trackStateProxy.calibratedSize(), [&](auto N)
-          visit_measurement(2, [&](auto N) {
-            std::cout << "*** inside visit_measurement lambda ***" << std::endl;
-            constexpr size_t kMeasurementSize = decltype(N)::value;
-//            std::cout << "*** inside visit_measurement dbg1 ***" << std::endl;
-            // simple projection matrix H_is, composed of 1 and 0, 2x6 or 1x6
-            const ActsMatrix<kMeasurementSize, eBoundSize> proj =
-                trackStateProxy.projector()
-                    .template topLeftCorner<kMeasurementSize, eBoundSize>();
-//            std::cout << "*** inside visit_measurement dbg2 ***" << std::endl;
-//            const auto Hi =
-//                (proj * result.jacobianFromStart).eval();  // 2x6 or 1x6
-//            std::cout << "*** inside visit_measurement dbg3 ***" << std::endl;
-//            const auto localMeasurements =
-//                trackStateProxy
-//                    .template calibrated<kMeasurementSize>();  // 2x1 or 1x1
-//            std::cout << "*** inside visit_measurement dbg4 ***" << std::endl;
-
-//            const auto covariance = trackStateProxy.template calibratedCovariance<
-//                kMeasurementSize>();  // 2x2 or 1x1. Should
-//                                      // be diagonal.
-//            std::cout << "*** inside visit_measurement dbg5 ***" << std::endl;
-//            const auto covInv = covariance.inverse();
-//            std::cout << "*** inside visit_measurement dbg6 ***" << std::endl;
-//            auto residuals =
-//                localMeasurements - proj * trackStateProxy.predicted();
-//            std::cout << "*** inside visit_measurement dbg7 ***" << std::endl;
-            // TODO: use detail::calculateResiduals? Theta/Phi?
-//            const auto derive1Chi2 =
-//                (-2 * Hi.transpose() * covInv * residuals).eval();
-//            const auto derive2Chi2 = (2 * Hi.transpose() * covInv * Hi).eval();
-//            result.collectorDerive1Chi2Sum += derive1Chi2;
-//            result.collectorDerive2Chi2Sum += derive2Chi2;
-
-//            double localChi2 =
-//                (residuals.transpose() * covInv * residuals).eval()(0);
-//            std::cout << "*** inside visit_measurement dbg8 ***" << std::endl;
-//            trackStateProxy.chi2() = localChi2;
-//            std::cout << "*** inside visit_measurement dbg9 ***" << std::endl;
-//            for (int i = 0; i < localMeasurements.rows(); ++i) {
-//              result.collectorMeasurements.push_back(localMeasurements(i));
-//              result.collectorResiduals.push_back(residuals(i));
-//              result.collectorCovariance.push_back(covariance(i, i));
-//              std::cout << "*** inside visit_measurement dbg10loop ***" << std::endl;
-//              // we assume measurements are not correlated
-//            }
-
-
-          });
-
+          {
+            //          std::cout << "*** outside visit_measurement lambda *** "
+            //          << trackStateProxy.calibratedSize() << std::endl;
+            ////          visit_measurement(trackStateProxy.calibratedSize(),
+            ///[&](auto N)
+            //          visit_measurement(2, [&](auto N) {
+            //            std::cout << "*** inside visit_measurement lambda ***"
+            //            << std::endl; constexpr size_t kMeasurementSize =
+            //            decltype(N)::value;
+            ////            std::cout << "*** inside visit_measurement dbg1 ***"
+            ///<< std::endl;
+            //            // simple projection matrix H_is, composed of 1 and 0,
+            //            2x6 or 1x6 const ActsMatrix<kMeasurementSize,
+            //            eBoundSize> proj =
+            //                trackStateProxy.projector()
+            //                    .template topLeftCorner<kMeasurementSize,
+            //                    eBoundSize>();
+            ////            std::cout << "*** inside visit_measurement dbg2 ***"
+            ///<< std::endl; /            const auto Hi = /                (proj
+            ///* result.jacobianFromStart).eval();  // 2x6 or 1x6 / std::cout <<
+            ///"*** inside visit_measurement dbg3 ***" << std::endl; / const
+            ///auto localMeasurements = /                trackStateProxy /
+            ///.template calibrated<kMeasurementSize>();  // 2x1 or 1x1 /
+            ///std::cout << "*** inside visit_measurement dbg4 ***" <<
+            ///std::endl;
+            //
+            ////            const auto covariance = trackStateProxy.template
+            ///calibratedCovariance< /                kMeasurementSize>();  //
+            ///2x2 or 1x1. Should /                                      // be
+            ///diagonal. /            std::cout << "*** inside visit_measurement
+            ///dbg5 ***" << std::endl; /            const auto covInv =
+            ///covariance.inverse(); /            std::cout << "*** inside
+            ///visit_measurement dbg6 ***" << std::endl; /            auto
+            ///residuals = /                localMeasurements - proj *
+            ///trackStateProxy.predicted(); /            std::cout << "***
+            ///inside visit_measurement dbg7 ***" << std::endl;
+            //            // TODO: use detail::calculateResiduals? Theta/Phi?
+            ////            const auto derive1Chi2 =
+            ////                (-2 * Hi.transpose() * covInv *
+            ///residuals).eval(); /            const auto derive2Chi2 = (2 *
+            ///Hi.transpose() * covInv * Hi).eval(); /
+            ///result.collectorDerive1Chi2Sum += derive1Chi2; /
+            ///result.collectorDerive2Chi2Sum += derive2Chi2;
+            //
+            ////            double localChi2 =
+            ////                (residuals.transpose() * covInv *
+            ///residuals).eval()(0); /            std::cout << "*** inside
+            ///visit_measurement dbg8 ***" << std::endl; /
+            ///trackStateProxy.chi2() = localChi2; /            std::cout <<
+            ///"*** inside visit_measurement dbg9 ***" << std::endl; / for (int
+            ///i = 0; i < localMeasurements.rows(); ++i) { /
+            ///result.collectorMeasurements.push_back(localMeasurements(i)); /
+            ///result.collectorResiduals.push_back(residuals(i)); /
+            ///result.collectorCovariance.push_back(covariance(i, i)); /
+            ///std::cout << "*** inside visit_measurement dbg10loop ***" <<
+            ///std::endl; /              // we assume measurements are not
+            ///correlated /            }
+            //
+            //
+            //          });
+          }
           /// WIP ^^^
-
         }
         /// gx2f:
         /// write out jacobian
@@ -534,66 +552,79 @@ class GX2FFitter {
 
         //
 
-        { /// ???? how can be get residuals? or first the measurements?
-//
-//          size_t currentTrackIndex = result.lastTrackIndex;
-//          auto trackStateProxy =
-//              result.fittedStates->getTrackState(currentTrackIndex);
-//
-//          const auto localMeasurements = inputMeasurements;  // 2x1 or 1x1
-//          //        auto residuals = localMeasurements - proj * trackStateProxy.predicted();
+        {
+            /// ???? how can be get residuals? or first the measurements?
+            //
+            //          size_t currentTrackIndex = result.lastTrackIndex;
+            //          auto trackStateProxy =
+            //              result.fittedStates->getTrackState(currentTrackIndex);
+            //
+            //          const auto localMeasurements = inputMeasurements;  //
+            //          2x1 or 1x1
+            //          //        auto residuals = localMeasurements - proj *
+            //          trackStateProxy.predicted();
         }
-
 
         {
-//auto res = filter(surface, state, stepper, navigator, result);
-//filter(const Surface* surface, propagator_state_t& state, const stepper_t& stepper, const navigator_t& navigator, result_type& result) const {
-//            // Try to find the surface in the measurement surfaces
+          // auto res = filter(surface, state, stepper, navigator, result);
+          // filter(const Surface* surface, propagator_state_t& state, const
+          // stepper_t& stepper, const navigator_t& navigator, result_type&
+          // result) const {
+          //             // Try to find the surface in the measurement surfaces
 
-//              // do the kalman update (no need to perform covTransport here, hence no point in performing globalToLocal correction)
-//              auto trackStateProxyRes = detail::kalmanHandleMeasurement(
-//                  state, stepper, extensions, *surface, sourcelink_it->second,
-//                  *result.fittedStates, result.lastTrackIndex, false, logger());
-//
-//              if (!trackStateProxyRes.ok()) {
-//                return trackStateProxyRes.error();
-//              }
-//
-//              const auto& trackStateProxy = *trackStateProxyRes;
-//              result.lastTrackIndex = trackStateProxy.index();
-//
-//              // Update the stepper if it is not an outlier
-//              if (trackStateProxy.typeFlags().test(
-//                      Acts::TrackStateFlag::MeasurementFlag)) {
-//                // Update the stepping state with filtered parameters
-//                ACTS_VERBOSE("Filtering step successful, updated parameters are : \n" << trackStateProxy.filtered().transpose());
-//                // update stepping state using filtered parameters after kalman
-//                stepper.update(state.stepping, MultiTrajectoryHelpers::freeFiltered(
-//                                   state.options.geoContext, trackStateProxy),
-//                               trackStateProxy.filtered(),
-//                               trackStateProxy.filteredCovariance(), *surface);
-//                // We count the state with measurement
-//                ++result.measurementStates;
-//              }
-//
-//              // Update state and stepper with post material effects
-//              materialInteractor(surface, state, stepper, navigator,
-//                                 MaterialUpdateStage::PostUpdate);
-//              // We count the processed state
-//              ++result.processedStates;
-//              // Update the number of holes count only when encoutering a
-//              // measurement
-//              result.measurementHoles = result.missedActiveSurfaces.size();
-//              // Since we encountered a measurment update the lastMeasurementIndex to the lastTrackIndex.
-//              result.lastMeasurementIndex = result.lastTrackIndex;
-//            }
-//          }
-//
+          //              // do the kalman update (no need to perform
+          //              covTransport here, hence no point in performing
+          //              globalToLocal correction) auto trackStateProxyRes =
+          //              detail::kalmanHandleMeasurement(
+          //                  state, stepper, extensions, *surface,
+          //                  sourcelink_it->second, *result.fittedStates,
+          //                  result.lastTrackIndex, false, logger());
+          //
+          //              if (!trackStateProxyRes.ok()) {
+          //                return trackStateProxyRes.error();
+          //              }
+          //
+          //              const auto& trackStateProxy = *trackStateProxyRes;
+          //              result.lastTrackIndex = trackStateProxy.index();
+          //
+          //              // Update the stepper if it is not an outlier
+          //              if (trackStateProxy.typeFlags().test(
+          //                      Acts::TrackStateFlag::MeasurementFlag)) {
+          //                // Update the stepping state with filtered
+          //                parameters
+          //                ACTS_VERBOSE("Filtering step successful, updated parameters are : \n" << trackStateProxy.filtered().transpose());
+          //                // update stepping state using filtered parameters
+          //                after kalman stepper.update(state.stepping,
+          //                MultiTrajectoryHelpers::freeFiltered(
+          //                                   state.options.geoContext,
+          //                                   trackStateProxy),
+          //                               trackStateProxy.filtered(),
+          //                               trackStateProxy.filteredCovariance(),
+          //                               *surface);
+          //                // We count the state with measurement
+          //                ++result.measurementStates;
+          //              }
+          //
+          //              // Update state and stepper with post material effects
+          //              materialInteractor(surface, state, stepper, navigator,
+          //                                 MaterialUpdateStage::PostUpdate);
+          //              // We count the processed state
+          //              ++result.processedStates;
+          //              // Update the number of holes count only when
+          //              encoutering a
+          //              // measurement
+          //              result.measurementHoles =
+          //              result.missedActiveSurfaces.size();
+          //              // Since we encountered a measurment update the
+          //              lastMeasurementIndex to the lastTrackIndex.
+          //              result.lastMeasurementIndex = result.lastTrackIndex;
+          //            }
+          //          }
+          //
         }
 
-
-
-        result.collectorMeasurements.push_back(state.stepping.pathAccumulated); /// placeholder
+        result.collectorMeasurements.push_back(
+            state.stepping.pathAccumulated);  /// placeholder
         result.collectorJacobians.push_back(state.stepping.jacobian);
       }
 
@@ -616,10 +647,11 @@ class GX2FFitter {
       //      // Post-finalization:
       //        ACTS_VERBOSE("Completing with fitted track parameter");
       //        // Transport & bind the parameter to the final surface
-//      auto res = stepper.boundState(state.stepping, *targetSurface, true, freeToBoundCorrection);
+      //      auto res = stepper.boundState(state.stepping, *targetSurface,
+      //      true, freeToBoundCorrection);
       //        if (!res.ok()) {
       ////          ACTS_ERROR("Error in " << direction << " filter: " <<
-      ///res.error());
+      /// res.error());
       //          result.result = res.error();
       //          return;
       //        }
@@ -628,35 +660,36 @@ class GX2FFitter {
       //        result.fittedParameters =
       //        std::get<BoundTrackParameters>(fittedState);
 
-      std::cout << "dbgActor: pre-finished" << std::endl;
-//      if (targetSurface == nullptr) {
-//        // If no target surface provided:
-//        // -> Fitting is finished here
-////          ACTS_VERBOSE(
-////              "No target surface set. Completing without fitted track "
-////              "parameter");
-//          std::cout << "No target surface set. Completing without fitted track parameter" << std::endl;
-//          // Remember the track fitting is done
-//          result.finished = true;
-//        }
-//      else {
-//
-//        std::cout << "wtf" << std::endl;
-//      }
+      //      std::cout << "dbgActor: pre-finished" << std::endl;
+      //      if (targetSurface == nullptr) {
+      //        // If no target surface provided:
+      //        // -> Fitting is finished here
+      ////          ACTS_VERBOSE(
+      ////              "No target surface set. Completing without fitted track
+      ///" /              "parameter");
+      //          std::cout << "No target surface set. Completing without fitted
+      //          track parameter" << std::endl;
+      //          // Remember the track fitting is done
+      //          result.finished = true;
+      //        }
+      //      else {
+      //
+      //        std::cout << "wtf" << std::endl;
+      //      }
 
-
-//          if (targetReached(state, stepper, navigator, *targetSurface,
-//                        logger())) {
+      //          if (targetReached(state, stepper, navigator, *targetSurface,
+      //                        logger())) {
       if (result.surfaceCount > 11) {
-        std::cout << "dbgActor: finish due to limit. Result might be garbage." << std::endl;
+        std::cout << "dbgActor: finish due to limit. Result might be garbage."
+                  << std::endl;
         result.finished = true;
       }
-//        result.finished = true;
-//      }
-      std::cout << "dbgActor: post-finished" << std::endl;
+      //        result.finished = true;
+      //      }
+      //      std::cout << "dbgActor: post-finished" << std::endl;
 
       /// WIP end
-      std::cout << "dbgActor: exit" << std::endl;
+      //      std::cout << "dbgActor: exit" << std::endl;
     }
   };
 
@@ -720,18 +753,19 @@ class GX2FFitter {
     GeometryIdentifier testGeoId;
     for (; it != end; ++it) {
       SourceLink sl = *it;
-//      std::cout << "check source links:" << std::endl;
-//      std::cout << "sl.geometryId() = " << sl.geometryId() << std::endl;
-//      std::cout << "sl.get<>() =\n" << sl.get<Test::TestSourceLink>().parameters << std::endl;
+      //      std::cout << "check source links:" << std::endl;
+      //      std::cout << "sl.geometryId() = " << sl.geometryId() << std::endl;
+      //      std::cout << "sl.get<>() =\n" << sl.get<Test::TestSourceLink>().parameters << std::endl;
       auto geoId = sl.geometryId();
-//      testGeoId = geoId;
+      //      testGeoId = geoId;
       inputMeasurements.emplace(geoId, std::move(sl));
     }
-    std::cout << "inputMeasurements.size() = " << inputMeasurements.size() << std::endl;
-//    for (const auto &p : inputMeasurements) {
-//      std::cout << "inputMeasurements.map-loop = " << p.second.geometryId() << std::endl;
-//    }
-
+    std::cout << "inputMeasurements.size() = " << inputMeasurements.size()
+              << std::endl;
+    //    for (const auto &p : inputMeasurements) {
+    //      std::cout << "inputMeasurements.map-loop = " <<
+    //      p.second.geometryId() << std::endl;
+    //    }
 
     /// Fully understand Aborter, Actor, Result later
     // Create the ActionList and AbortList
@@ -789,8 +823,9 @@ class GX2FFitter {
     for (size_t nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
       /// update params
 
-      std::cout << "\nnUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax
-                << "\n" << std::endl;
+      std::cout << "\nnUpdate = " << nUpdate + 1 << "/"
+                << gx2fOptions.nUpdateMax << "\n"
+                << std::endl;
       params.parameters() += deltaParams;
       std::cout << "updated params" << params << std::endl;
       /// set up propagator and co
@@ -836,67 +871,76 @@ class GX2FFitter {
       /// propagate with params and return jacobians, residuals (and chi2)
       // Propagator + Actor (einfacher Jacobian accumulation) [actor vor dem
       // loop allokieren] makeMeasurements umschreiben
-      /// Concept on how to get the parameters back for the next step in the next lines
+      /// Concept on how to get the parameters back for the next step in the
+      /// next lines
       auto& propRes = *result;
       auto gx2fResult = std::move(propRes.template get<GX2FResult>());
-      std::cout << "gx2fResult.collectorMeasurements.size() = " << gx2fResult.collectorMeasurements.size() << std::endl;
-      for (auto s : gx2fResult.collectorMeasurements){
+      std::cout << "gx2fResult.collectorMeasurements.size() = "
+                << gx2fResult.collectorMeasurements.size() << std::endl;
+      for (auto s : gx2fResult.collectorMeasurements) {
         std::cout << s << ", ";
       }
       std::cout << std::endl;
 
-      std::cout << "gx2fResult.collectorResiduals.size() = " << gx2fResult.collectorResiduals.size() << std::endl;
-      for (auto vec : gx2fResult.collectorResiduals){
-        for (auto s : vec){
+      std::cout << "gx2fResult.collectorResiduals.size() = "
+                << gx2fResult.collectorResiduals.size() << std::endl;
+      for (auto vec : gx2fResult.collectorResiduals) {
+        for (auto s : vec) {
           std::cout << s << ", ";
         }
         std::cout << "\n" << std::endl;
       }
       std::cout << std::endl;
 
-      std::cout << "gx2fResult.collectorCovariance.size() = " << gx2fResult.collectorCovariance.size() << std::endl;
-      for (auto s : gx2fResult.collectorCovariance){
-        std::cout << s(0,0) << ", " << s(0,1) << ", " << s(1,0) << ", " << s(1,1) << "\n";
+      std::cout << "gx2fResult.collectorCovariance.size() = "
+                << gx2fResult.collectorCovariance.size() << std::endl;
+      for (auto s : gx2fResult.collectorCovariance) {
+        std::cout << s(0, 0) << ", " << s(0, 1) << ", " << s(1, 0) << ", "
+                  << s(1, 1) << "\n";
       }
       std::cout << std::endl;
 
-//      std::cout << "gx2fResult.collectorJacobians.size() = " << gx2fResult.collectorJacobians.size() << std::endl;
-//      for (auto s : gx2fResult.collectorJacobians){
-//        std::cout << s << "\n" << std::endl;
-//      }
-
+      //      std::cout << "gx2fResult.collectorJacobians.size() = " <<
+      //      gx2fResult.collectorJacobians.size() << std::endl; for (auto s :
+      //      gx2fResult.collectorJacobians){
+      //        std::cout << s << "\n" << std::endl;
+      //      }
 
       double chi2sum = 0;
       BoundMatrix aMatrix = BoundMatrix::Zero();
       BoundVector bVector = BoundVector::Zero();
 
-
-      for (int iMeas=0; iMeas < gx2fResult.collectorResiduals.size(); iMeas++){
+      for (int iMeas = 0; iMeas < gx2fResult.collectorResiduals.size();
+           iMeas++) {
         ActsMatrix<2, eBoundSize> proj;
 
-        for (int i_ = 0; i_<2;i_++){
-          for (int j_ = 0; j_<eBoundSize;j_++){
-            proj(i_,j_) = 0;
+        for (int i_ = 0; i_ < 2; i_++) {
+          for (int j_ = 0; j_ < eBoundSize; j_++) {
+            proj(i_, j_) = 0;
           }
         }
-        proj(0,0) = 1;
-        proj(1,1) = 1;
+        proj(0, 0) = 1;
+        proj(1, 1) = 1;
 
-//        std::cout << "proj = " << proj << std::endl;
+        //        std::cout << "proj = " << proj << std::endl;
 
         const auto ri = gx2fResult.collectorResiduals[iMeas];
         const auto covi = gx2fResult.collectorCovariance[iMeas];
         const auto coviInv = covi.inverse();
-        const auto projectedJacobian = proj * gx2fResult.collectorJacobians[iMeas];
+        const auto projectedJacobian =
+            proj * gx2fResult.collectorJacobians[iMeas];
 
-//        std::cout << "projectedJacobian = " << projectedJacobian << std::endl;
+        //        std::cout << "projectedJacobian = " << projectedJacobian <<
+        //        std::endl;
 
         const double chi2meas = (ri.transpose() * coviInv * ri).eval()(0);
-//        std::cout << "chi2meas = " << chi2meas << std::endl;
-        const BoundMatrix aMatrixMeas = projectedJacobian.transpose() * coviInv * projectedJacobian;
-//        std::cout << "aMatrixMeas = " << aMatrixMeas << std::endl;
-        const BoundVector bVectorMeas = projectedJacobian.transpose() * coviInv * ri;
-//        std::cout << "bVectorMeas = " << bVectorMeas << std::endl;
+        //        std::cout << "chi2meas = " << chi2meas << std::endl;
+        const BoundMatrix aMatrixMeas =
+            projectedJacobian.transpose() * coviInv * projectedJacobian;
+        //        std::cout << "aMatrixMeas = " << aMatrixMeas << std::endl;
+        const BoundVector bVectorMeas =
+            projectedJacobian.transpose() * coviInv * ri;
+        //        std::cout << "bVectorMeas = " << bVectorMeas << std::endl;
         chi2sum += chi2meas;
         aMatrix += aMatrixMeas;
         bVector += bVectorMeas;
@@ -907,8 +951,6 @@ class GX2FFitter {
       std::cout << "bVector = " << bVector << std::endl;
       deltaParams = aMatrix.colPivHouseholderQr().solve(bVector);
       std::cout << "deltaParams = " << deltaParams << std::endl;
-
-
 
       /// calculate delta params
       /// iterate through jacobians+residuals
