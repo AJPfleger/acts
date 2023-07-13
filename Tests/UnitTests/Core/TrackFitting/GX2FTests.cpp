@@ -90,7 +90,7 @@ Acts::CurvilinearTrackParameters makeParameters() {
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
   Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
-  Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
+  Acts::Vector4 mPos4(0_m, 0., 0., 42_ns);
   return Acts::CurvilinearTrackParameters(mPos4, 0_degree, 90_degree, 1_GeV,
                                           1_e, cov);
 }
@@ -128,7 +128,7 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
 
   // Create configurations for surfaces
   std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
-  for (unsigned int i = 0; i < nSurfaces; i++) {
+  for (unsigned int i = 1; i <= nSurfaces; i++) {
     // Position of the surfaces
     CuboidVolumeBuilder::SurfaceConfig cfg;
     cfg.position = {i * UnitConstants::m, 0, 0.};
@@ -446,6 +446,7 @@ BOOST_AUTO_TEST_CASE(WIP) {
   std::cout << "\n*** Start fitting -> GX2F ***\n" << std::endl;
   /// GX2FFitter
   {
+    std::cout << "\n*** startParameter unsmeared: ***\n" << start << std::endl;
     const Surface* rSurface = &start.referenceSurface();
 
     Navigator::Config cfg{detector.geometry};
@@ -474,7 +475,7 @@ BOOST_AUTO_TEST_CASE(WIP) {
 
     Experimental::Gx2FitterOptions gx2fOptionsTest(
         tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
-        rSurface, false, false, FreeToBoundCorrection(false), 3);
+        rSurface, false, false, FreeToBoundCorrection(false), 5);
 
     Acts::TrackContainer tracksTest{Acts::VectorTrackContainer{},
                                     Acts::VectorMultiTrajectory{}};
@@ -559,7 +560,7 @@ BOOST_AUTO_TEST_CASE(WIP) {
 // This test checks if the call to the fitter works and no errors occur in the
 // framework, without fitting and updating any parameters
 BOOST_AUTO_TEST_CASE(NoFit) {
-  std::cout << "Start test case NoFit" << std::endl;
+  std::cout << "\n\n##### Start test case NoFit #####" << std::endl;
 
   // Context objects
   Acts::GeometryContext geoCtx;
@@ -614,7 +615,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
 
-  std::cout << "Finished test case NoFit" << std::endl;
+  std::cout << "##### Finished test case NoFit #####" << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
