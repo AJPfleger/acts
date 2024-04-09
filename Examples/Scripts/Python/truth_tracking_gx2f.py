@@ -6,6 +6,9 @@ from typing import Optional
 import acts
 import acts.examples
 
+from acts.examples.odd import getOpenDataDetector
+from common import getOpenDataDetectorDirectory
+
 u = acts.UnitConstants
 
 
@@ -33,7 +36,7 @@ def runTruthTrackingGx2f(
     )
 
     s = s or acts.examples.Sequencer(
-        events=10000, numThreads=-1, logLevel=acts.logging.INFO
+        events=10000000, numThreads=-1, logLevel=acts.logging.ERROR
     )
 
     rnd = acts.examples.RandomNumbers()
@@ -44,7 +47,7 @@ def runTruthTrackingGx2f(
             s,
             MomentumConfig(100.0 * u.GeV, 100.0 * u.GeV, transverse=True),
             EtaConfig(-2.0, 2.0),
-            ParticleConfig(2, acts.PdgParticle.eMuon, False),
+            ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
             multiplicity=1,
             rnd=rnd,
             outputDirRoot=outputDir,
@@ -56,7 +59,7 @@ def runTruthTrackingGx2f(
         assert inputParticlePath.exists()
         s.addReader(
             RootParticleReader(
-                level=acts.logging.INFO,
+                level=acts.logging.ERROR,
                 filePath=str(inputParticlePath.resolve()),
                 particleCollection="particles_input",
                 orderedEvents=False,
@@ -87,16 +90,17 @@ def runTruthTrackingGx2f(
         rnd=rnd,
         truthSeedRanges=TruthSeedRanges(
             pt=(1 * u.GeV, None),
-            nHits=(9, None),
+            nHits=(5, None),
         ),
     )
-
+    # what format are our measurements at this stage?
     addGx2fTracks(
         s,
         trackingGeometry,
         field,
         nUpdateMax=17,
         relChi2changeCutOff=1e-7,
+        logLevel=acts.logging.ERROR,
     )
 
     # Output
@@ -150,19 +154,30 @@ def runTruthTrackingGx2f(
 if "__main__" == __name__:
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
-    # detector, trackingGeometry, _ = getOpenDataDetector()
-    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    geoDir = getOpenDataDetectorDirectory()
+    oddMaterialMap = geoDir / "data/odd-material-maps.root"
+    oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
+    detector, trackingGeometry, decorators = getOpenDataDetector(geoDir, mdecorator=oddMaterialDeco)
+    # detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    import time
+    startTime = time.time()
 
     runTruthTrackingGx2f(
         trackingGeometry=trackingGeometry,
         # decorators=decorators,
         field=field,
         digiConfigFile=srcdir
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-        # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
+        # / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        # / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
+        / "../actxtra/scripts/configs/odd-digi-smearing-config-Barrel-17.json",
+        # / "../actxtra/scripts/configs/odd-digi-smearing-config.json",
         # outputCsv=True,
         # inputParticlePath=inputParticlePath,
-        outputDir=Path.cwd(),
+        outputDir=Path.cwd() / "odd_output_tests20240311_vol17_100GeV",
     ).run()
+
+    executionTime = (time.time() - startTime)
+    print('Execution time in minutes: ' + str(executionTime/60))

@@ -1289,7 +1289,7 @@ def addGx2fTracks(
         inputSourceLinks="sourcelinks",
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
-        inputClusters=clusters if clusters is not None else "",
+        inputClusters=clusters if clusters is not None else "", # do we need the clusters?
         outputTracks="gx2fTracks",
         pickTrack=-1,
         fit=acts.examples.makeGlobalChiSquareFitterFunction(

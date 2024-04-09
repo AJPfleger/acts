@@ -580,8 +580,7 @@ class Gx2Fitter {
     // Preprocess Measurements (Sourcelinks -> map)
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyway, so the map can own them.
-    ACTS_VERBOSE("Preparing " << std::distance(it, end)
-                              << " input measurements");
+    ACTS_INFO("Preparing " << std::distance(it, end) << " input measurements");
     std::map<GeometryIdentifier, SourceLink> inputMeasurements;
 
     for (; it != end; ++it) {
@@ -590,6 +589,7 @@ class Gx2Fitter {
       inputMeasurements.emplace(geoId, std::move(sl));
     }
     ACTS_VERBOSE("inputMeasurements.size() = " << inputMeasurements.size());
+//    std::cout << "QPDATAINPUTMEASUREMENTSSIZE " << inputMeasurements.size() << std::endl;
 
     /// Fully understand Aborter, Actor, Result later
     // Create the ActionList and AbortList
@@ -681,7 +681,7 @@ class Gx2Fitter {
       // TODO genernalize for n-dimensional fit
       constexpr std::size_t ndf = 4;
       if (ndf + 1 > gx2fResult.collectorResiduals.size()) {
-        ACTS_INFO("Not enough measurements. Require "
+        ACTS_ERROR("Not enough measurements. Require "
                   << ndf + 1 << ", but only "
                   << gx2fResult.collectorResiduals.size() << " could be used.");
         return Experimental::GlobalChiSquareFitterError::NotEnoughMeasurements;
@@ -840,6 +840,8 @@ class Gx2Fitter {
 
     // TODO write test for calculateTrackQuantities
     calculateTrackQuantities(track);
+
+//    std::cout << "QPDATAOUTMEASUREMENTSSIZE " << track.nMeasurements() << std::endl;
 
     // Set the chi2sum for the track summary manually, since we don't calculate
     // it for each state

@@ -25,31 +25,6 @@ from acts.examples.reconstruction import (
 )
 
 from typing import Optional, Union, List
-# def addTruthTrackFinder(
-#         sequence: acts.examples.Sequencer,
-#         logLevel: acts.logging.Level = None,
-#         truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
-# ):
-#
-#     if truthSeedRanges is not None:
-#         selectedParticles = "truth_seeds_selected"
-#         addSeedingTruthSelection(
-#             s,
-#             inputParticles,
-#             selectedParticles,
-#             truthSeedRanges,
-#             logLevel,
-#         )
-#     else:
-#         selectedParticles = inputParticles
-#
-#     truthTrkFndAlg = acts.examples.TruthTrackFinder(
-#         level=logLevel,
-#         inputParticles=selectedParticles,
-#         inputMeasurementParticlesMap="measurement_particles_map",
-#         outputProtoTracks="truth_particle_tracks",
-#     )
-#     sequence.addAlgorithm(truthTrkFndAlg)
 
 def runItkFc(ETA, PHI):
 
@@ -57,14 +32,15 @@ def runItkFc(ETA, PHI):
     u = acts.UnitConstants
     geo_dir = pathlib.Path("../../acts-itk")
     actxtra_dir = pathlib.Path("../../actxtra")
-    outputDir = pathlib.Path.cwd() / "itk_output"
+    outputDir = pathlib.Path.cwd() / "itk_output_tests20240308"
     # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 
-    detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
+    # detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
+    detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir, material=False)
     field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
     rnd = acts.examples.RandomNumbers(seed=42)
 
-    s = acts.examples.Sequencer(events=200000, numThreads=-1, outputDir=str(outputDir),
+    s = acts.examples.Sequencer(events=100000, numThreads=-1, outputDir=str(outputDir),
                                 logLevel=acts.logging.ERROR)
 
     if not ttbar_pu200:
@@ -75,8 +51,9 @@ def runItkFc(ETA, PHI):
             # PhiConfig(PHI * u.degree, PHI * u.degree),
             EtaConfig(-2, 2, uniform=True),
             PhiConfig(0 * u.degree, 360 * u.degree),
-            ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
+            ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=False),
             rnd=rnd,
+            # outputDirRoot=outputDir,
         )
     else:
         addPythia8(
@@ -117,7 +94,7 @@ def runItkFc(ETA, PHI):
         #                / "itk-hgtd/itk-smearing-config.json",  # change this file to make it do digitization
         digiConfigFile=actxtra_dir
                        # / "scripts/configs/itk-smearing-config-pixelBarrel.json",  # change this file to make it do digitization
-                       / "scripts/configs/itk-smearing-config-fullBarrel.json",  # change this file to make it do digitization
+                       / "scripts/configs/itk-smearing-config-pixelBarrel.json",  # change this file to make it do digitization
         outputDirRoot=outputDir,
         rnd=rnd,
     )
@@ -225,25 +202,6 @@ if "__main__" == __name__:
     # srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     runItkFc(0.05, 2)
-
-
-    # # detector, trackingGeometry, _ = getOpenDataDetector()
-    # detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
-    #
-    # field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    #
-    # runTruthTrackingGx2f(
-    #     trackingGeometry=trackingGeometry,
-    #     # decorators=decorators,
-    #     field=field,
-    #     digiConfigFile=srcdir
-    #                    / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
-    #     # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
-    #     # outputCsv=True,
-    #     # inputParticlePath=inputParticlePath,
-    #     outputDir=Path.cwd(),
-    # ).run()
-
 
 
 
