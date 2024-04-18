@@ -64,8 +64,8 @@ linkcheck_retries = 5
 linkcheck_ignore = [
     r"https://doi.org/.*",
     r"https://cernvm.cern.ch/.*",
-    r"http://eigen.tuxfamily.org.*",
-    r"https://pythia.org.*",
+    r"https://eigen.tuxfamily.org/.*",
+    r"https://pythia.org",
     r"https://lcginfo.cern.ch/.*",
     r"https://.*\.?intel.com/.*",
     r"https://www.conventionalcommits.org/.*",
