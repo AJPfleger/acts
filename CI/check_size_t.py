@@ -7,10 +7,24 @@ from fnmatch import fnmatch
 import re
 import sys
 
-# Expanded regex to catch all specified types
-ex = re.compile(
-    r"\b(?<!std::)(size_t|ptrdiff_t|nullptr_t|int8_t|int16_t|int32_t|int64_t|uint8_t|uint16_t|uint32_t|uint64_t|max_align_t)\b"
-)
+# List of types to match
+types_to_replace = [
+    "size_t",
+    "ptrdiff_t",
+    "nullptr_t",
+    "int8_t",
+    "int16_t",
+    "int32_t",
+    "int64_t",
+    "uint8_t",
+    "uint16_t",
+    "uint32_t",
+    "uint64_t",
+    "max_align_t",
+]
+
+# Create regex pattern to match each type
+ex = re.compile(r"\b(?<!std::)(" + "|".join(types_to_replace) + r")\b")
 
 github = "GITHUB_ACTIONS" in os.environ
 
