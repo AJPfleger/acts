@@ -35,7 +35,7 @@ def main():
 
     args = p.parse_args()
 
-    exit = 0
+    exit_code = 0
 
     # walk over all files
     for root, _, files in os.walk("."):
@@ -58,10 +58,10 @@ def main():
             if any([fnmatch(str(filepath), e) for e in args.exclude]):
                 continue
 
-            for TYPE in type_list:
-                changed_lines = handle_file(file=filepath, fix=args.fix, TYPE=TYPE)
+            for c_type in type_list:
+                changed_lines = handle_file(file=filepath, fix=args.fix, c_type=c_type)
                 if len(changed_lines) > 0:
-                    exit = 1
+                    exit_code = 1
                     print()
                     print(filepath)
                     for i, oline in changed_lines:
@@ -69,16 +69,15 @@ def main():
 
                         if github:
                             print(
-                                f"::error file={filepath},line={i+1},title=Do not use C-style {TYPE}::Replace {TYPE} with std::{TYPE}"
+                                f"::error file={filepath},line={i+1},title=Do not use C-style {type}::Replace {type} with std::{type}"
                             )
 
-    return exit
+    return exit_code
 
 
-def handle_file(file: Path, fix: bool, TYPE: str) -> list[tuple[int, str]]:
+def handle_file(file: Path, fix: bool, c_type: str) -> list[tuple[int, str]]:
 
-    # Compile the regex pattern
-    ex = re.compile(rf"(\b(?<!std::){TYPE}\b)")
+    ex = re.compile(rf"\b(?<!std::){c_type}\b")
 
     content = file.read_text()
     lines = content.splitlines()
@@ -86,7 +85,7 @@ def handle_file(file: Path, fix: bool, TYPE: str) -> list[tuple[int, str]]:
     changed_lines = []
 
     for i, oline in enumerate(lines):
-        line, n_subs = ex.subn(rf"std::{TYPE}", oline)
+        line, n_subs = ex.subn(rf"std::{c_type}", oline)
         lines[i] = line
         if n_subs > 0:
             changed_lines.append((i, oline))
