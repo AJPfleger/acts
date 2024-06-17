@@ -81,7 +81,7 @@ def main():
     return exit
 
 
-def handle_file(file: Path, fix: bool, TYPE: string) -> list[tuple[int, str]]:
+def handle_file(file: Path, fix: bool, TYPE: str) -> list[tuple[int, str]]:
     content = file.read_text()
     lines = content.splitlines()
 
