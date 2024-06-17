@@ -65,7 +65,7 @@ def main():
                 if any([fnmatch(str(filepath), e) for e in args.exclude]):
                     continue
 
-                changed_lines = handle_file(filepath, fix=args.fix, TYPE)
+                changed_lines = handle_file(file=filepath, fix=args.fix, TYPE=TYPE)
                 if len(changed_lines) > 0:
                     exit = 1
                     print()
