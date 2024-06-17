@@ -38,12 +38,6 @@ def main():
     exit = 0
 
     for TYPE in type_list:
-        # Create the regex pattern dynamically using f-string
-        pattern = rf"\b(?<!std::{TYPE}){TYPE}\b"
-
-        # Compile the regex pattern
-        ex = re.compile(pattern)
-
         # walk over all files
         for root, _, files in os.walk("."):
             root = Path(root)
@@ -82,6 +76,13 @@ def main():
 
 
 def handle_file(file: Path, fix: bool, TYPE: str) -> list[tuple[int, str]]:
+
+    # Create the regex pattern dynamically using f-string
+    pattern = rf"\b(?<!std::{TYPE}){TYPE}\b"
+
+    # Compile the regex pattern
+    ex = re.compile(pattern)
+
     content = file.read_text()
     lines = content.splitlines()
 
