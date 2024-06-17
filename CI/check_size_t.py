@@ -37,28 +37,28 @@ def main():
 
     exit = 0
 
-    for TYPE in type_list:
-        # walk over all files
-        for root, _, files in os.walk("."):
-            root = Path(root)
-            for filename in files:
-                # get the full path of the file
-                filepath = root / filename
-                if filepath.suffix not in (
-                    ".hpp",
-                    ".cpp",
-                    ".ipp",
-                    ".h",
-                    ".C",
-                    ".c",
-                    ".cu",
-                    ".cuh",
-                ):
-                    continue
+    # walk over all files
+    for root, _, files in os.walk("."):
+        root = Path(root)
+        for filename in files:
+            # get the full path of the file
+            filepath = root / filename
+            if filepath.suffix not in (
+                ".hpp",
+                ".cpp",
+                ".ipp",
+                ".h",
+                ".C",
+                ".c",
+                ".cu",
+                ".cuh",
+            ):
+                continue
 
-                if any([fnmatch(str(filepath), e) for e in args.exclude]):
-                    continue
+            if any([fnmatch(str(filepath), e) for e in args.exclude]):
+                continue
 
+            for TYPE in type_list:
                 changed_lines = handle_file(file=filepath, fix=args.fix, TYPE=TYPE)
                 if len(changed_lines) > 0:
                     exit = 1
@@ -77,11 +77,8 @@ def main():
 
 def handle_file(file: Path, fix: bool, TYPE: str) -> list[tuple[int, str]]:
 
-    # Create the regex pattern dynamically using f-string
-    pattern = rf"(\b(?<!std::){TYPE}\b)"
-
     # Compile the regex pattern
-    ex = re.compile(pattern)
+    ex = re.compile(rf"(\b(?<!std::){TYPE}\b)")
 
     content = file.read_text()
     lines = content.splitlines()
