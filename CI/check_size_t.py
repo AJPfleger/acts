@@ -7,8 +7,7 @@ from fnmatch import fnmatch
 import re
 import sys
 
-# List of types to match
-types_to_replace = [
+type_list = [
     "size_t",
     "ptrdiff_t",
     "nullptr_t",
@@ -23,8 +22,15 @@ types_to_replace = [
     "max_align_t",
 ]
 
-# Create regex pattern to match each type
-ex = re.compile(r"\b(?<!std::)(" + "|".join(types_to_replace) + r")\b")
+# Initialize an empty dictionary to store compiled regex patterns
+regex_patterns = {}
+
+# Create regex patterns for each type in type_list
+for TYPE in type_list:
+    # Create the regex pattern dynamically using f-string
+    pattern = rf"\b(?<!std::{TYPE}){TYPE}\b"
+    # Compile the regex pattern
+    regex_patterns[TYPE] = re.compile(pattern)
 
 github = "GITHUB_ACTIONS" in os.environ
 
@@ -69,17 +75,13 @@ def main():
                 for i, oline in changed_lines:
                     print(f"{i}: {oline}")
 
-                    def repl_func(match):
-                        # Check if the match is already prefixed with std::
-                        if match.group(0).startswith("std::"):
-                            return match.group(0)
-                        else:
-                            return f"std::{match.group(0)}"
-
                     if github:
-                        print(
-                            f"::error file={filepath},line={i+1},title=Do not use C-style types::Replace {oline.strip()} with std::{repl_func(ex.match(oline)).group(0)}"
-                        )
+                        TYPE = next((t for t in type_list if t in oline), None)
+                        if TYPE:
+                            ex = regex_patterns[TYPE]
+                            print(
+                                f"::error file={filepath},line={i+1},title=Do not use C-style types::Replace {oline.strip()} with std::{TYPE}"
+                            )
 
     return exit_code
 
@@ -91,20 +93,23 @@ def handle_file(file: Path, fix: bool) -> list[tuple[int, str]]:
     changed_lines = []
 
     for i, oline in enumerate(lines):
+        for TYPE in type_list:
+            ex = regex_patterns[TYPE]
 
-        def repl_func(match):
-            # Check if the match is already prefixed with std::
-            if match.group(0).startswith("std::"):
-                return match.group(0)
-            else:
-                return f"std::{match.group(0)}"
+            def repl_func(match):
+                # Check if the match is already prefixed with std::
+                if match.group(0).startswith(f"std::{TYPE}"):
+                    return match.group(0)
+                else:
+                    return f"std::{TYPE}"
 
-        # Replace matches in the line using a lambda function
-        line, n_subs = ex.subn(repl_func, oline)
+            # Replace matches in the line using a lambda function
+            line, n_subs = ex.subn(repl_func, oline)
 
-        if n_subs > 0:
-            lines[i] = line
-            changed_lines.append((i, oline))
+            if n_subs > 0:
+                lines[i] = line
+                changed_lines.append((i, oline))
+                break  # Move to the next line after the first replacement
 
     if fix and len(changed_lines) > 0:
         file.write_text("\n".join(lines) + "\n")
