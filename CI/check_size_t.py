@@ -28,9 +28,7 @@ github = "GITHUB_ACTIONS" in os.environ
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("input")
-    p.add_argument(
-        "--fix", action="store_true", help="Attempt to fix any license issues found."
-    )
+    p.add_argument("--fix", action="store_true", help="Attempt to fix C-style types.")
     p.add_argument("--exclude", "-e", action="append", default=[])
 
     args = p.parse_args()
@@ -69,7 +67,7 @@ def main():
 
                         if github:
                             print(
-                                f"::error file={filepath},line={i+1},title=Do not use C-style {type}::Replace {type} with std::{type}"
+                                f"::error file={filepath},line={i+1},title=Do not use C-style {c_type}::Replace {c_type} with std::{c_type}"
                             )
 
     return exit_code
