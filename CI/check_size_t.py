@@ -70,9 +70,19 @@ def handle_file(file: Path, fix: bool) -> list[tuple[int, str]]:
     changed_lines = []
 
     for i, oline in enumerate(lines):
-        line, n_subs = ex.subn(r"std::\1", oline)
-        lines[i] = line
+
+        def repl_func(match):
+            # Check if the match is already prefixed with std::
+            if match.group(0).startswith("std::"):
+                return match.group(0)
+            else:
+                return f"std::{match.group(0)}"
+
+        # Replace matches in the line using a lambda function
+        line, n_subs = ex.subn(repl_func, oline)
+
         if n_subs > 0:
+            lines[i] = line
             changed_lines.append((i, oline))
 
     if fix and len(changed_lines) > 0:
@@ -81,5 +91,5 @@ def handle_file(file: Path, fix: bool) -> list[tuple[int, str]]:
     return changed_lines
 
 
-if "__main__" == __name__:
+if __name__ == "__main__":
     sys.exit(main())
