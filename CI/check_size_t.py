@@ -7,10 +7,20 @@ from fnmatch import fnmatch
 import re
 import sys
 
-# Expanded regex to catch all specified types
-ex = re.compile(
-    r"\b(?<!std::)(size_t|ptrdiff_t|nullptr_t|int8_t|int16_t|int32_t|int64_t|uint8_t|uint16_t|uint32_t|uint64_t|max_align_t)\b"
-)
+type_list = [
+    "size_t",
+    "ptrdiff_t",
+    "nullptr_t",
+    "int8_t",
+    "int16_t",
+    "int32_t",
+    "int64_t",
+    "uint8_t",
+    "uint16_t",
+    "uint32_t",
+    "uint64_t",
+    "max_align_t",
+]
 
 github = "GITHUB_ACTIONS" in os.environ
 
@@ -25,52 +35,60 @@ def main():
 
     args = p.parse_args()
 
-    # walk over all files
-    exit_code = 0
-    for root, _, files in os.walk("."):
-        root = Path(root)
-        for filename in files:
-            # get the full path of the file
-            filepath = root / filename
-            if filepath.suffix not in (
-                ".hpp",
-                ".cpp",
-                ".ipp",
-                ".h",
-                ".C",
-                ".c",
-                ".cu",
-                ".cuh",
-            ):
-                continue
+    exit = 0
 
-            if any([fnmatch(str(filepath), e) for e in args.exclude]):
-                continue
+    for TYPE in type_list:
+        # Create the regex pattern dynamically using f-string
+        pattern = rf"\b(?<!std::{TYPE}){TYPE}\b"
 
-            changed_lines = handle_file(filepath, fix=args.fix)
-            if len(changed_lines) > 0:
-                exit_code = 1
-                print()
-                print(filepath)
-                for i, oline in changed_lines:
-                    print(f"{i}: {oline}")
+        # Compile the regex pattern
+        ex = re.compile(pattern)
 
-                    if github:
-                        print(
-                            f"::error file={filepath},line={i+1},title=Do not use C-style size_t::Replace size_t with std::size_t"
-                        )
+        # walk over all files
+        for root, _, files in os.walk("."):
+            root = Path(root)
+            for filename in files:
+                # get the full path of the file
+                filepath = root / filename
+                if filepath.suffix not in (
+                    ".hpp",
+                    ".cpp",
+                    ".ipp",
+                    ".h",
+                    ".C",
+                    ".c",
+                    ".cu",
+                    ".cuh",
+                ):
+                    continue
 
-    return exit_code
+                if any([fnmatch(str(filepath), e) for e in args.exclude]):
+                    continue
+
+                changed_lines = handle_file(filepath, fix=args.fix, TYPE)
+                if len(changed_lines) > 0:
+                    exit = 1
+                    print()
+                    print(filepath)
+                    for i, oline in changed_lines:
+                        print(f"{i}: {oline}")
+
+                        if github:
+                            print(
+                                f"::error file={filepath},line={i+1},title=Do not use C-style size_t::Replace size_t with std::size_t"
+                            )
+
+    return exit
 
 
-def handle_file(file: Path, fix: bool) -> list[tuple[int, str]]:
+def handle_file(file: Path, fix: bool, TYPE: string) -> list[tuple[int, str]]:
     content = file.read_text()
     lines = content.splitlines()
 
     changed_lines = []
 
     for i, oline in enumerate(lines):
-        line, n_subs = ex.subn(r"std::\1", oline)
+        line, n_subs = ex.subn(rf"std::{TYPE}", oline)
         lines[i] = line
         if n_subs > 0:
             changed_lines.append((i, oline))
