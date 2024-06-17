@@ -69,7 +69,7 @@ def main():
 
                         if github:
                             print(
-                                f"::error file={filepath},line={i+1},title=Do not use C-style size_t::Replace size_t with std::size_t"
+                                f"::error file={filepath},line={i+1},title=Do not use C-style {TYPE}::Replace {TYPE} with std::{TYPE}"
                             )
 
     return exit
@@ -78,7 +78,7 @@ def main():
 def handle_file(file: Path, fix: bool, TYPE: str) -> list[tuple[int, str]]:
 
     # Create the regex pattern dynamically using f-string
-    pattern = rf"\b(?<!std::{TYPE}){TYPE}\b"
+    pattern = rf"(\b(?<!std::){TYPE}\b)"
 
     # Compile the regex pattern
     ex = re.compile(pattern)
