@@ -69,9 +69,16 @@ def main():
                 for i, oline in changed_lines:
                     print(f"{i}: {oline}")
 
+                    def repl_func(match):
+                        # Check if the match is already prefixed with std::
+                        if match.group(0).startswith("std::"):
+                            return match.group(0)
+                        else:
+                            return f"std::{match.group(0)}"
+
                     if github:
                         print(
-                            f"::error file={filepath},line={i+1},title=Do not use C-style types::Replace {oline.strip()} with std::{oline.strip()}"
+                            f"::error file={filepath},line={i+1},title=Do not use C-style types::Replace {oline.strip()} with std::{repl_func(ex.match(oline)).group(0)}"
                         )
 
     return exit_code
