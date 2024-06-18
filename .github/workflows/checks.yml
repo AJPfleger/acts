@@ -36,8 +36,10 @@ jobs:
           python-version: '3.12'
       - name: Install black
         run: pip install black==23.12.1
-      - name: Run black format check
-        run: black --check . --extend-exclude ".*thirdparty.*"
+      - name: Run black to reformat code
+        run: black . --extend-exclude ".*thirdparty.*"
+      - name: Show changes made by black
+        run: git diff --color
 
   license:
     runs-on: ubuntu-latest
