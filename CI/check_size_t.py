@@ -75,7 +75,7 @@ def main():
 
 def handle_file(file: Path, fix: bool, c_type: str) -> list[tuple[int, str]]:
 
-    ex = re.compile(rf"\b(?<!std::){c_type}\b")
+    ex = re.compile(rf"(\b(?<!std::){c_type})\b")
 
     content = file.read_text()
     lines = content.splitlines()
