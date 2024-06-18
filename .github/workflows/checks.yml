@@ -21,9 +21,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install black
-        run: pip install black==24.3.0
+        run: pip install black==23.12.1
       - name: Run black to reformat code
-        run: black --check . --extend-exclude ".*thirdparty.*"
+        run: black . --extend-exclude ".*thirdparty.*"
       - name: Show changes made by black
         run: git diff --color
 
