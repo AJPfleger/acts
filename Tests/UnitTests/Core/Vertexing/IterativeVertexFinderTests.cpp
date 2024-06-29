@@ -107,11 +107,13 @@ struct InputTrackStub {
   BoundTrackParameters m_parameters;
 };
 
+Acts::Logging::Level logLevel = Acts::Logging::INFO;
+
 ///
 /// @brief Unit test for IterativeVertexFinder for BoundTrackParameters
 ///
 BOOST_AUTO_TEST_CASE(iterative_finder_test) {
-  bool debug = false;
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("IterativeVertexFinderTest", logLevel))
 
   // Set up RNG
   int mySeed = 31415;
@@ -184,11 +186,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       // Number of tracks
       std::uint32_t nTracks = nTracksDist(gen);
 
-      if (debug) {
-        std::cout << "Event " << iEvent << ", Vertex " << iVertex << "/"
-                  << nVertices << " with " << nTracks << " tracks."
-                  << std::endl;
-      }
+      ACTS_DEBUG("Event " << iEvent << ", Vertex " << iVertex << "/"
+                  << nVertices << " with " << nTracks << " tracks.");
       // Create perigee surface
       std::shared_ptr<PerigeeSurface> perigeeSurface =
           Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
@@ -268,33 +267,25 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     // check if same amount of vertices has been found with tolerance of 2
     CHECK_CLOSE_ABS(vertexCollection.size(), nVertices, 2);
 
-    if (debug) {
-      std::cout << "########## RESULT: ########## Event " << iEvent
-                << std::endl;
-      std::cout << "Number of true vertices: " << nVertices << std::endl;
-      std::cout << "Number of reco vertices: " << vertexCollection.size()
-                << std::endl;
+    {
+      ACTS_DEBUG("########## RESULT: ########## Event " << iEvent
+               << "\nNumber of true vertices: " << nVertices << "\nNumber of reco vertices: " << vertexCollection.size());
 
+      ACTS_DEBUG("----- True vertices -----");
       int count = 1;
-      std::cout << "----- True vertices -----" << std::endl;
       for (const auto& vertex : trueVertices) {
         Vector3 pos = vertex.position();
-        std::cout << count << ". True Vertex:\t Position:"
-                  << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
-                  << std::endl;
-        std::cout << "Number of tracks: " << vertex.tracks().size() << std::endl
-                  << std::endl;
+        ACTS_DEBUG(count << ". True Vertex:\t Position: (" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")");
+        ACTS_DEBUG("Number of tracks: " << vertex.tracks().size());
         count++;
       }
-      std::cout << "----- Reco vertices -----" << std::endl;
+
+      ACTS_DEBUG("----- Reco vertices -----");
       count = 1;
       for (const auto& vertex : vertexCollection) {
         Vector3 pos = vertex.position();
-        std::cout << count << ". Reco Vertex:\t Position:"
-                  << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
-                  << std::endl;
-        std::cout << "Number of tracks: " << vertex.tracks().size() << std::endl
-                  << std::endl;
+        ACTS_DEBUG(count << ". Reco Vertex:\t Position: (" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")");
+        ACTS_DEBUG("Number of tracks: " << vertex.tracks().size());
         count++;
       }
     }
@@ -327,7 +318,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 ///        for user defined InputTrack track type
 ///
 BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
-  bool debug = false;
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("IterativeVertexFinderTest", logLevel))
 
   // Set up RNG
   int mySeed = 31415;
@@ -404,11 +395,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       // Number of tracks
       std::uint32_t nTracks = nTracksDist(gen);
 
-      if (debug) {
-        std::cout << "Event " << iEvent << ", Vertex " << iVertex << "/"
-                  << nVertices << " with " << nTracks << " tracks."
-                  << std::endl;
-      }
+      ACTS_DEBUG("Event " << iEvent << ", Vertex " << iVertex << "/"
+                  << nVertices << " with " << nTracks << " tracks.");
+
       // Create perigee surface
       std::shared_ptr<PerigeeSurface> perigeeSurface =
           Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
@@ -489,33 +478,26 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // check if same amount of vertices has been found with tolerance of 2
     CHECK_CLOSE_ABS(vertexCollectionUT.size(), nVertices, 2);
 
-    if (debug) {
-      std::cout << "########## RESULT: ########## Event " << iEvent
-                << std::endl;
-      std::cout << "Number of true vertices: " << nVertices << std::endl;
-      std::cout << "Number of reco vertices: " << vertexCollectionUT.size()
-                << std::endl;
+    {
+      ACTS_DEBUG("########## RESULT: ########## Event " << iEvent
+                << "\nNumber of true vertices: " << nVertices
+                << "\nNumber of reco vertices: " << vertexCollectionUT.size());
 
+      ACTS_DEBUG("----- True vertices -----");
       int count = 1;
-      std::cout << "----- True vertices -----" << std::endl;
       for (const auto& vertex : trueVertices) {
         Vector3 pos = vertex.position();
-        std::cout << count << ". True Vertex:\t Position:"
-                  << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
-                  << std::endl;
-        std::cout << "Number of tracks: " << vertex.tracks().size() << std::endl
-                  << std::endl;
+        ACTS_DEBUG(count << ". True Vertex:\t Position: (" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")");
+        ACTS_DEBUG("Number of tracks: " << vertex.tracks().size());
         count++;
       }
-      std::cout << "----- Reco vertices -----" << std::endl;
+
+      ACTS_DEBUG("----- Reco vertices -----");
       count = 1;
       for (const auto& vertex : vertexCollectionUT) {
         Vector3 pos = vertex.position();
-        std::cout << count << ". Reco Vertex:\t Position:"
-                  << "(" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")"
-                  << std::endl;
-        std::cout << "Number of tracks: " << vertex.tracks().size() << std::endl
-                  << std::endl;
+        ACTS_DEBUG(count << ". Reco Vertex:\t Position: (" << pos[eX] << "," << pos[eY] << "," << pos[eZ] << ")");
+        ACTS_DEBUG("Number of tracks: " << vertex.tracks().size());
         count++;
       }
     }
