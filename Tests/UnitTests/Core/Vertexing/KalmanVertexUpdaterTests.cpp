@@ -76,13 +76,14 @@ std::uniform_real_distribution<double> resIPDist(0., 100_um);
 std::uniform_real_distribution<double> resAngDist(0., 0.1);
 // Track q/p resolution distribution
 std::uniform_real_distribution<double> resQoPDist(-0.01, 0.01);
-// Number of vertices per test event distribution
+
+Acts::Logging::Level logLevel = Acts::Logging::INFO;
 
 ///
 /// @brief Unit test for KalmanVertexUpdater
 ///
 BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
-  bool debug = false;
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("KalmanVertexUpdaterTest", logLevel))
 
   // Number of tests
   unsigned int nTests = 10;
@@ -115,9 +116,8 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
   // VertexUpdater adds track to vertex and updates the position
   // which should afterwards be closer to the origin/track
   for (unsigned int i = 0; i < nTests; ++i) {
-    if (debug) {
-      std::cout << "Test " << i + 1 << std::endl;
-    }
+    ACTS_DEBUG("Test " << i + 1);
+
     // Construct positive or negative charge randomly
     double q = qDist(gen) < 0 ? -1. : 1.;
 
@@ -127,9 +127,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;
 
-    if (debug) {
-      std::cout << "Creating track parameters: " << paramVec << std::endl;
-    }
+    ACTS_DEBUG("Creating track parameters: " << paramVec);
 
     // Fill vector of track objects with simple covariance matrix
     Covariance covMat;
@@ -173,18 +171,14 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // Update trkAtVertex with assumption of originating from vtx
     KalmanVertexUpdater::updateVertexWithTrack(vtx, trkAtVtx, 3);
 
-    if (debug) {
-      std::cout << "Old vertex position: " << vtxPos << std::endl;
-      std::cout << "New vertex position: " << vtx.position() << std::endl;
-    }
+    ACTS_DEBUG("Old vertex position: " << vtxPos <<  "\nNew vertex position: "
+                                       << vtx.position());
 
     double oldDistance = vtxPos.norm();
     double newDistance = vtx.position().norm();
 
-    if (debug) {
-      std::cout << "Old distance: " << oldDistance << std::endl;
-      std::cout << "New distance: " << newDistance << std::endl;
-    }
+    ACTS_DEBUG("Old distance: " << oldDistance << "\nNew distance: "
+                                << newDistance);
 
     // After update, vertex should be closer to the track
     BOOST_CHECK_LT(newDistance, oldDistance);
@@ -203,7 +197,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
 /// @brief Unit test for KalmanVertexTrackUpdater
 ///
 BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
-  bool debug = true;
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("KalmanVertexUpdaterTest", logLevel))
 
   // Number of tests
   unsigned int nTests = 10;
@@ -252,9 +246,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     paramVec << d0Dist(gen), z0Dist(gen), phiDist(gen), thetaDist(gen),
         q / pTDist(gen), 0.;
 
-    if (debug) {
-      std::cout << "Creating track parameters: " << paramVec << std::endl;
-    }
+    ACTS_DEBUG("Creating track parameters: " << paramVec);
 
     // Fill vector of track objects with simple covariance matrix
     Covariance covMat;
@@ -310,10 +302,8 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
         ip3dEst
             .calculateDistance(geoContext, trkAtVtx.fittedParams, vtxPos, state)
             .value();
-    if (debug) {
-      std::cout << "Old distance: " << oldDistance << std::endl;
-      std::cout << "New distance: " << newDistance << std::endl;
-    }
+    ACTS_DEBUG("Old distance: " << oldDistance << "\nNew distance: "
+                                << newDistance);
 
     // Parameters should have changed
     BOOST_CHECK_NE(fittedParamsCopy, trkAtVtx.fittedParams);
