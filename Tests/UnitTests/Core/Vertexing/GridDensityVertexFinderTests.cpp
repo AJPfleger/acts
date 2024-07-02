@@ -64,12 +64,14 @@ std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
 // Track eta distribution
 std::uniform_real_distribution<double> etaDist(-4., 4.);
 
+Acts::Logging::Level logLevel = Acts::Logging::INFO;
+
 ///
 /// @brief Unit test for GridDensityVertexFinder without caching
 /// of track density values
 ///
 BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
-  bool debugMode = false;
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("GridDensityVertexFinderTest", logLevel))
 
   // Note that the AdaptiveGridTrackDensity and the GaussianGridTrackDensity
   // only furnish exactly the same results for uneven mainGridSize, where the
@@ -167,10 +169,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   if (res1.ok()) {
     BOOST_CHECK(!(*res1).empty());
     Vector3 result1 = (*res1).back().position();
-    if (debugMode) {
-      std::cout << "Vertex position result 1: " << result1.transpose()
-                << std::endl;
-    }
+    ACTS_DEBUG("Vertex position result 1: " << result1.transpose());
     CHECK_CLOSE_ABS(result1[eZ], zVertexPos1, 1_mm);
     zResult1 = result1[eZ];
   }
@@ -179,10 +178,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   if (res2.ok()) {
     BOOST_CHECK(!(*res2).empty());
     Vector3 result2 = (*res2).back().position();
-    if (debugMode) {
-      std::cout << "Vertex position result 2: " << result2.transpose()
-                << std::endl;
-    }
+    ACTS_DEBUG("Vertex position result 2: " << result2.transpose());
     CHECK_CLOSE_ABS(result2[eZ], zVertexPos1, 1_mm);
     zResult2 = result2[eZ];
   }
@@ -192,7 +188,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 }
 
 BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
-  bool debugMode = false;
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("GridDensityVertexFinderTest", logLevel))
 
   const int mainGridSize = 3001;
   const int trkGridSize = 35;
@@ -285,10 +281,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   if (res1.ok()) {
     BOOST_CHECK(!(*res1).empty());
     Vector3 result = (*res1).back().position();
-    if (debugMode) {
-      std::cout << "Vertex position after first fill 1: " << result.transpose()
-                << std::endl;
-    }
+    ACTS_DEBUG("Vertex position after first fill 1: " << result.transpose())
     CHECK_CLOSE_ABS(result[eZ], zVertexPos1, 1_mm);
     zResult1 = result[eZ];
   }
@@ -300,10 +293,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   if (res2.ok()) {
     BOOST_CHECK(!(*res2).empty());
     Vector3 result = (*res2).back().position();
-    if (debugMode) {
-      std::cout << "Vertex position after first fill 2: " << result.transpose()
-                << std::endl;
-    }
+    ACTS_DEBUG("Vertex position after first fill 2: " << result.transpose());
     CHECK_CLOSE_ABS(result[eZ], zVertexPos1, 1_mm);
     zResult2 = result[eZ];
   }
@@ -329,11 +319,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   if (res3.ok()) {
     BOOST_CHECK(!(*res3).empty());
     Vector3 result = (*res3).back().position();
-    if (debugMode) {
-      std::cout
-          << "Vertex position after removing tracks near first density peak 1: "
-          << result << std::endl;
-    }
+    ACTS_DEBUG("Vertex position after removing tracks near first density peak 1: ");
     CHECK_CLOSE_ABS(result[eZ], zVertexPos2, 1_mm);
     zResult1 = result[eZ];
   }
@@ -345,11 +331,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   if (res4.ok()) {
     BOOST_CHECK(!(*res4).empty());
     Vector3 result = (*res4).back().position();
-    if (debugMode) {
-      std::cout
-          << "Vertex position after removing tracks near first density peak 2: "
-          << result << std::endl;
-    }
+    ACTS_DEBUG("Vertex position after removing tracks near first density peak 2: ");
     CHECK_CLOSE_ABS(result[eZ], zVertexPos2, 1_mm);
     zResult2 = result[eZ];
   }
@@ -361,7 +343,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 /// @brief Unit test for GridDensityVertexFinder with seed with estimation
 ///
 BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
-  bool debugMode = false;
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("GridDensityVertexFinderTest", logLevel))
 
   const int mainGridSize = 3001;
   const int trkGridSize = 35;
@@ -451,9 +433,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     BOOST_CHECK_NE(constraintVtx.covariance(), cov);
     BOOST_CHECK_NE(cov(eZ, eZ), 0.);
     covZZ1 = cov(eZ, eZ);
-    if (debugMode) {
-      std::cout << "Estimated z-seed width 1: " << cov(eZ, eZ) << std::endl;
-    }
+    ACTS_DEBUG("Estimated z-seed width 1: " << cov(eZ, eZ));
   }
 
   // Test finder 2
@@ -469,9 +449,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     BOOST_CHECK_NE(constraintVtx.covariance(), cov);
     BOOST_CHECK_NE(cov(eZ, eZ), 0.);
     covZZ2 = cov(eZ, eZ);
-    if (debugMode) {
-      std::cout << "Estimated z-seed width 2: " << cov(eZ, eZ) << std::endl;
-    }
+    ACTS_DEBUG("Estimated z-seed width 2: " << cov(eZ, eZ));
   }
 
   // Test for same seed width
