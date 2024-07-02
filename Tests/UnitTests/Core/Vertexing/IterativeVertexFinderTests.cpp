@@ -437,10 +437,15 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
         // Fill vector of track objects now for user track type
         Covariance covMat;
 
-        covMat << res_d0 * res_d0, 0., 0., 0., 0., 0., 0., res_z0 * res_z0, 0.,
-            0., 0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
-            res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
-            0., 0., 0., 0., 1.;
+        // clang-format off
+        covMat <<
+          res_d0 * res_d0, 0., 0., 0., 0., 0.,
+          0., res_z0 * res_z0, 0., 0., 0., 0.,
+          0., 0., res_ph * res_ph, 0., 0., 0.,
+          0., 0., 0., res_th * res_th, 0., 0.,
+          0., 0., 0., 0., res_qp * res_qp, 0.,
+          0., 0., 0., 0., 0., 1.;
+        // clang-format on
         auto params =
             BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat),
                                  ParticleHypothesis::pion());
