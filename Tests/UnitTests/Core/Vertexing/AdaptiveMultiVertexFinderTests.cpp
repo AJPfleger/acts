@@ -67,10 +67,12 @@ MagneticFieldContext magFieldContext = MagneticFieldContext();
 
 const std::string toolString = "AMVF";
 
+Acts::Logging::Level logLevel = Acts::Logging::INFO;
+
 /// @brief AMVF test with Gaussian seed finder
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
-  // Set debug mode
-  bool debugMode = false;
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("AdaptiveMultiVertexFinderTest", logLevel))
+
   // Set up constant B-Field
   auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 2_T));
 
@@ -124,15 +126,14 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   auto csvData = readTracksAndVertexCSV(toolString);
   std::vector<BoundTrackParameters> tracks = std::get<TracksData>(csvData);
 
-  if (debugMode) {
-    std::cout << "Number of tracks in event: " << tracks.size() << std::endl;
-    int maxCout = 10;
-    int count = 0;
+  {
+    ACTS_DEBUG("Number of tracks in event: " << tracks.size());
+    const int maxLogCount = 10;
+    int logCount = 0;
     for (const auto& trk : tracks) {
-      std::cout << count << ". track: " << std::endl;
-      std::cout << "params: " << trk << std::endl;
-      count++;
-      if (count == maxCout) {
+      logCount++;
+      ACTS_DEBUG(logCount << ". track: params: " << trk);
+      if (logCount == maxLogCount) {
         break;
       }
     }
@@ -155,27 +156,24 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
       std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
   if (!findResult.ok()) {
-    std::cout << findResult.error().message() << std::endl;
+    ACTS_ERROR(findResult.error().message());
   }
 
   BOOST_CHECK(findResult.ok());
 
   std::vector<Vertex> allVertices = *findResult;
 
-  if (debugMode) {
-    std::cout << "Time needed: " << timediff << " ms." << std::endl;
-    std::cout << "Number of vertices reconstructed: " << allVertices.size()
-              << std::endl;
+  {
+    ACTS_DEBUG("Time needed: " << timediff << " ms.");
+    ACTS_DEBUG("Number of vertices reconstructed: " << allVertices.size());
 
-    int count = 0;
+    int logCount = 0;
     for (const auto& vtx : allVertices) {
-      count++;
-      std::cout << count << ". Vertex at position: " << vtx.position()[0]
-                << ", " << vtx.position()[1] << ", " << vtx.position()[2]
-                << std::endl;
-      std::cout << count << ". Vertex with cov: " << vtx.covariance()
-                << std::endl;
-      std::cout << "\t with n tracks: " << vtx.tracks().size() << std::endl;
+      logCount++;
+      ACTS_DEBUG(logCount << ". Vertex at position: " << vtx.position()[0]
+                          << ", " << vtx.position()[1] << ", " << vtx.position()[2]
+                          << "\n    with cov:\n" << vtx.covariance()
+                          <<"\n   with " << vtx.tracks().size() << " tracks.");
     }
   }
 
@@ -221,8 +219,8 @@ struct InputTrackStub {
 
 /// @brief AMVF test with user-defined input track type
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
-  // Set debug mode
-  bool debugMode = false;
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("AdaptiveMultiVertexFinderTest", logLevel))
+
   // Set up constant B-Field
   auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 2_T));
 
@@ -289,15 +287,14 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
     idCount++;
   }
 
-  if (debugMode) {
-    std::cout << "Number of tracks in event: " << tracks.size() << std::endl;
-    int maxCout = 10;
-    int count = 0;
+  {
+    ACTS_DEBUG("Number of tracks in event: " << tracks.size());
+    const int maxLogCount = 10;
+    int logCount = 0;
     for (const auto& trk : tracks) {
-      std::cout << count << ". track: " << std::endl;
-      std::cout << "params: " << trk << std::endl;
-      count++;
-      if (count == maxCout) {
+      logCount++;
+      ACTS_DEBUG(logCount << ". track: params: " << trk);
+      if (logCount == maxLogCount) {
         break;
       }
     }
@@ -317,30 +314,27 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   auto findResult = finder.find(userInputTracks, vertexingOptions, state);
 
   if (!findResult.ok()) {
-    std::cout << findResult.error().message() << std::endl;
+    ACTS_ERROR(findResult.error().message());
   }
 
   BOOST_CHECK(findResult.ok());
 
   std::vector<Vertex> allVertices = *findResult;
 
-  if (debugMode) {
-    std::cout << "Number of vertices reconstructed: " << allVertices.size()
-              << std::endl;
+  {
+    ACTS_DEBUG("Number of vertices reconstructed: ")
 
-    int count = 0;
+    int logCount = 0;
     for (const auto& vtx : allVertices) {
-      count++;
-      std::cout << count << ". Vertex at position: " << vtx.position()[0]
-                << ", " << vtx.position()[1] << ", " << vtx.position()[2]
-                << std::endl;
-      std::cout << count << ". Vertex with cov: " << vtx.covariance()
-                << std::endl;
-      std::cout << "\t with n tracks: " << vtx.tracks().size() << std::endl;
+      logCount++;
+      ACTS_DEBUG(logCount << ". Vertex at position: " << vtx.position()[0]
+                          << ", " << vtx.position()[1] << ", " << vtx.position()[2]
+                          << "\n    with cov:\n" << vtx.covariance()
+                          <<"\n   with " << vtx.tracks().size() << " tracks.");
     }
     for (auto& trk : allVertices[0].tracks()) {
-      std::cout << "Track ID at first vertex: "
-                << trk.originalParams.as<InputTrackStub>()->id() << std::endl;
+      ACTS_DEBUG("Track ID at first vertex: "
+                 << trk.originalParams.as<InputTrackStub>()->id());
     }
   }
 
@@ -367,11 +361,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
 
 /// @brief AMVF test with grid seed finder
 BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
-  // Set debug mode
-  bool debugMode = false;
-  if (debugMode) {
-    std::cout << "Starting AMVF test with grid seed finder..." << std::endl;
-  }
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("AdaptiveMultiVertexFinderTest", logLevel))
+
+  ACTS_DEBUG("Starting AMVF test with grid seed finder...");
+
   // Set up constant B-Field
   auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 2_T));
 
@@ -427,15 +420,14 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
 
-  if (debugMode) {
-    std::cout << "Number of tracks in event: " << tracks.size() << std::endl;
-    int maxCout = 10;
-    int count = 0;
+  {
+    ACTS_DEBUG("Number of tracks in event: " << tracks.size());
+    const int maxLogCount = 10;
+    int logCount = 0;
     for (const auto& trk : tracks) {
-      std::cout << count << ". track: " << std::endl;
-      std::cout << "params: " << trk << std::endl;
-      count++;
-      if (count == maxCout) {
+      logCount++;
+      ACTS_DEBUG(logCount << ". track: params: " << trk);
+      if (logCount == maxLogCount) {
         break;
       }
     }
@@ -458,27 +450,24 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
       std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
   if (!findResult.ok()) {
-    std::cout << findResult.error().message() << std::endl;
+    ACTS_ERROR(findResult.error().message());
   }
 
   BOOST_CHECK(findResult.ok());
 
   std::vector<Vertex> allVertices = *findResult;
 
-  if (debugMode) {
-    std::cout << "Time needed: " << timediff << " ms." << std::endl;
-    std::cout << "Number of vertices reconstructed: " << allVertices.size()
-              << std::endl;
+  {
+    ACTS_DEBUG("Time needed: " << timediff << " ms.");
+    ACTS_DEBUG("Number of vertices reconstructed: ");
 
-    int count = 0;
+    int logCount = 0;
     for (const auto& vtx : allVertices) {
-      count++;
-      std::cout << count << ". Vertex at position: " << vtx.position()[0]
+      logCount++;
+      ACTS_DEBUG(logCount << ". Vertex at position: " << vtx.position()[0]
                 << ", " << vtx.position()[1] << ", " << vtx.position()[2]
-                << std::endl;
-      std::cout << count << ". Vertex with cov: " << vtx.covariance()
-                << std::endl;
-      std::cout << "\t with n tracks: " << vtx.tracks().size() << std::endl;
+      << "\n    with cov:\n" << vtx.covariance()
+      <<"\n   with " << vtx.tracks().size() << " tracks.");
     }
   }
   // Test expected outcomes from athena implementation
@@ -515,12 +504,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 /// @brief AMVF test with adaptive grid seed finder
 BOOST_AUTO_TEST_CASE(
     adaptive_multi_vertex_finder_adaptive_grid_seed_finder_test) {
-  // Set debug mode
-  bool debugMode = false;
-  if (debugMode) {
-    std::cout << "Starting AMVF test with adaptive grid seed finder..."
-              << std::endl;
-  }
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("AdaptiveMultiVertexFinderTest", logLevel))
+
+  ACTS_DEBUG("Starting AMVF test with adaptive grid seed finder...");
+
   // Set up constant B-Field
   auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 2_T));
 
@@ -584,15 +571,14 @@ BOOST_AUTO_TEST_CASE(
   auto csvData = readTracksAndVertexCSV(toolString);
   auto tracks = std::get<TracksData>(csvData);
 
-  if (debugMode) {
-    std::cout << "Number of tracks in event: " << tracks.size() << std::endl;
-    int maxCout = 10;
-    int count = 0;
+  {
+    ACTS_DEBUG("Number of tracks in event: " << tracks.size());
+    const int maxLogCount = 10;
+    int logCount = 0;
     for (const auto& trk : tracks) {
-      std::cout << count << ". track: " << std::endl;
-      std::cout << "params: " << trk << std::endl;
-      count++;
-      if (count == maxCout) {
+      logCount++;
+      ACTS_DEBUG(logCount << ". track: params: " << trk);
+      if (logCount == maxLogCount) {
         break;
       }
     }
@@ -614,27 +600,24 @@ BOOST_AUTO_TEST_CASE(
       std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
 
   if (!findResult.ok()) {
-    std::cout << findResult.error().message() << std::endl;
+    ACTS_ERROR(findResult.error().message());
   }
 
   BOOST_CHECK(findResult.ok());
 
   std::vector<Vertex> allVertices = *findResult;
 
-  if (debugMode) {
-    std::cout << "Time needed: " << timediff << " ms." << std::endl;
-    std::cout << "Number of vertices reconstructed: " << allVertices.size()
-              << std::endl;
+  {
+    ACTS_DEBUG("Time needed: " << timediff << " ms.");
+    ACTS_DEBUG("Number of vertices reconstructed: " << allVertices.size());
 
-    int count = 0;
+    int logCount = 0;
     for (const auto& vtx : allVertices) {
-      count++;
-      std::cout << count << ". Vertex at position: " << vtx.position()[0]
-                << ", " << vtx.position()[1] << ", " << vtx.position()[2]
-                << std::endl;
-      std::cout << count << ". Vertex with cov: " << vtx.covariance()
-                << std::endl;
-      std::cout << "\t with n tracks: " << vtx.tracks().size() << std::endl;
+      logCount++;
+      ACTS_DEBUG(logCount << ". Vertex at position: " << vtx.position()[0]
+                          << ", " << vtx.position()[1] << ", " << vtx.position()[2]
+                          << "\n    with cov:\n" << vtx.covariance()
+                          <<"\n   with " << vtx.tracks().size() << " tracks.");
     }
   }
   // Test expected outcomes from athena implementation
