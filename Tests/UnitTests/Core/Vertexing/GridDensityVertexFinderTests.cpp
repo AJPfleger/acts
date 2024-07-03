@@ -157,12 +157,12 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 
   auto res1 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res1.ok()) {
-    std::cout << res1.error().message() << std::endl;
+    ACTS_ERROR(res1.error().message());
   }
 
   auto res2 = finder2.find(inputTracks, vertexingOptions, state2);
   if (!res2.ok()) {
-    std::cout << res2.error().message() << std::endl;
+    ACTS_ERROR(res2.error().message());
   }
 
   double zResult1 = 0;
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   auto res1 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res1.ok()) {
-    std::cout << res1.error().message() << std::endl;
+    ACTS_ERROR(res1.error().message());
   }
   if (res1.ok()) {
     BOOST_CHECK(!(*res1).empty());
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   auto res2 = finder2.find(inputTracks, vertexingOptions, state2);
   if (!res2.ok()) {
-    std::cout << res2.error().message() << std::endl;
+    ACTS_ERROR(res2.error().message());
   }
   if (res2.ok()) {
     BOOST_CHECK(!(*res2).empty());
@@ -314,7 +314,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   auto res3 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res3.ok()) {
-    std::cout << res3.error().message() << std::endl;
+    ACTS_ERROR(res3.error().message());
   }
   if (res3.ok()) {
     BOOST_CHECK(!(*res3).empty());
@@ -326,7 +326,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   auto res4 = finder2.find(inputTracks, vertexingOptions, state2);
   if (!res4.ok()) {
-    std::cout << res4.error().message() << std::endl;
+    ACTS_ERROR(res4.error().message());
   }
   if (res4.ok()) {
     BOOST_CHECK(!(*res4).empty());
@@ -423,7 +423,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   // Test finder 1
   auto res1 = finder1.find(inputTracks, vertexingOptions, state1);
   if (!res1.ok()) {
-    std::cout << res1.error().message() << std::endl;
+    ACTS_ERROR(res1.error().message());
   }
 
   double covZZ1 = 0;
@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   // Test finder 2
   auto res2 = finder2.find(inputTracks, vertexingOptions, state2);
   if (!res2.ok()) {
-    std::cout << res2.error().message() << std::endl;
+    ACTS_ERROR(res2.error().message());
   }
 
   double covZZ2 = 0;
