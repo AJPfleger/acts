@@ -534,6 +534,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 /// @brief Unit test for IterativeVertexFinder with Athena reference data
 ///
 BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("IterativeVertexFinderTest", logLevel))
+
   // Set up constant B-Field
   auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 2_T});
 
@@ -604,7 +606,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   BOOST_CHECK(findResult.ok());
 
   if (!findResult.ok()) {
-    std::cout << findResult.error().message() << std::endl;
+    ACTS_ERROR(findResult.error().message());
   }
 
   // Retrieve vertices found by vertex finder
