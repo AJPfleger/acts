@@ -10,6 +10,7 @@
 
 #include "Acts/Material/Interactions.hpp"
 
+#include <numbers>
 #include <random>
 
 namespace ActsFatras::detail {
@@ -31,11 +32,12 @@ struct Highland {
   double operator()(generator_t &generator, const Acts::MaterialSlab &slab,
                     Particle &particle) const {
     // compute the planar scattering angle
-    const auto theta0 = Acts::computeMultipleScatteringTheta0(
+    const double theta0 = Acts::computeMultipleScatteringTheta0(
         slab, particle.absolutePdg(), particle.mass(), particle.qOverP(),
         particle.absoluteCharge());
     // draw from the normal distribution representing the 3d angle distribution
-    return std::normal_distribution<double>(0.0, M_SQRT2 * theta0)(generator);
+    return std::normal_distribution<double>(
+        0., std::numbers::sqrt2 * theta0)(generator);
   }
 };
 

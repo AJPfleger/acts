@@ -11,6 +11,7 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Material/Interactions.hpp"
 
+#include <numbers>
 #include <random>
 
 namespace ActsFatras::detail {
@@ -81,13 +82,13 @@ struct GeneralMixture {
     } else {
       // for electrons we fall back to the Highland (extension)
       // return projection factor times sigma times gauss random
-      const auto theta0 = Acts::computeMultipleScatteringTheta0(
+      const double theta0 = Acts::computeMultipleScatteringTheta0(
           slab, particle.absolutePdg(), particle.mass(), particle.qOverP(),
           particle.absoluteCharge());
-      theta = std::normal_distribution<double>(0.0, theta0)(generator);
+      theta = std::normal_distribution<double>(0., theta0)(generator);
     }
     // scale from planar to 3d angle
-    return M_SQRT2 * theta;
+    return std::numbers::sqrt2 * theta;
   }
 
   // helper methods for getting parameters and simulating

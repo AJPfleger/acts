@@ -477,43 +477,43 @@ float Acts::deriveEnergyLossModeQOverP(const MaterialSlab& slab,
 namespace {
 
 /// Multiple scattering theta0 for minimum ionizing particles.
-inline float theta0Highland(float xOverX0, float momentumInv,
-                            float q2OverBeta2) {
+inline double theta0Highland(double xOverX0, double momentumInv,
+                             double q2OverBeta2) {
   // RPP2018 eq. 33.15 (treats beta and q² consistently)
-  const float t = std::sqrt(xOverX0 * q2OverBeta2);
+  const double t = std::sqrt(xOverX0 * q2OverBeta2);
   // log((x/X0) * (q²/beta²)) = log((sqrt(x/X0) * (q/beta))²)
   //                          = 2 * log(sqrt(x/X0) * (q/beta))
-  return 13.6_MeV * momentumInv * t * (1.0f + 0.038f * 2 * std::log(t));
+  return 13.6_MeV * momentumInv * t * (1. + 0.038 * 2. * std::log(t));
 }
 
 /// Multiple scattering theta0 for electrons.
-inline float theta0RossiGreisen(float xOverX0, float momentumInv,
-                                float q2OverBeta2) {
+inline double theta0RossiGreisen(double xOverX0, double momentumInv,
+                                 double q2OverBeta2) {
   // TODO add source paper/ resource
-  const float t = std::sqrt(xOverX0 * q2OverBeta2);
-  return 17.5_MeV * momentumInv * t *
-         (1.0f + 0.125f * std::log10(10.0f * xOverX0));
+  const double t = std::sqrt(xOverX0 * q2OverBeta2);
+  return 17.5_MeV * momentumInv * t * (1. + 0.125 * std::log10(10. * xOverX0));
 }
 
 }  // namespace
 
-float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
-                                            PdgParticle absPdg, float m,
-                                            float qOverP, float absQ) {
+double Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
+                                             PdgParticle absPdg, float m,
+                                             float qOverP, float absQ) {
   assert((absPdg == Acts::makeAbsolutePdgParticle(absPdg)) &&
          "pdg is not absolute");
 
   // return early in case of vacuum or zero thickness
   if (!slab.isValid()) {
-    return 0.0f;
+    return 0.;
   }
 
   // relative radiation length
-  const float xOverX0 = slab.thicknessInX0();
+  const double xOverX0 = static_cast<double>(slab.thicknessInX0());
   // 1/p = q/(pq) = (q/p)/q
-  const float momentumInv = std::abs(qOverP / absQ);
+  const double momentumInv = static_cast<double>(std::abs(qOverP / absQ));
   // q²/beta²; a smart compiler should be able to remove the unused computations
-  const float q2OverBeta2 = RelativisticQuantities(m, qOverP, absQ).q2OverBeta2;
+  const double q2OverBeta2 =
+      static_cast<double>(RelativisticQuantities(m, qOverP, absQ).q2OverBeta2);
 
   // electron or positron
   if (absPdg == PdgParticle::eElectron) {

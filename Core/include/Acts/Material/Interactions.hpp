@@ -133,8 +133,8 @@ float deriveEnergyLossModeQOverP(const MaterialSlab& slab, PdgParticle absPdg,
 /// @param m         Particle mass
 /// @param qOverP    Particle charge divided by absolute momentum
 /// @param absQ      Absolute particle charge
-float computeMultipleScatteringTheta0(const MaterialSlab& slab,
-                                      PdgParticle absPdg, float m, float qOverP,
-                                      float absQ);
+double computeMultipleScatteringTheta0(const MaterialSlab& slab,
+                                       PdgParticle absPdg, float m,
+                                       float qOverP, float absQ);
 
 }  // namespace Acts

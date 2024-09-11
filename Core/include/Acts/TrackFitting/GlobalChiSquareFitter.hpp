@@ -665,12 +665,11 @@ class Gx2Fitter {
             const auto& particle =
                 parametersWithHypothesis->particleHypothesis();
 
-            const double sigma =
-                static_cast<double>(Acts::computeMultipleScatteringTheta0(
-                    interaction.slab, particle.absolutePdg(), particle.mass(),
-                    static_cast<float>(
-                        parametersWithHypothesis->parameters()[eBoundQOverP]),
-                    particle.absoluteCharge()));
+            const double sigma = Acts::computeMultipleScatteringTheta0(
+                interaction.slab, particle.absolutePdg(), particle.mass(),
+                static_cast<float>(
+                    parametersWithHypothesis->parameters()[eBoundQOverP]),
+                particle.absoluteCharge());
             ACTS_VERBOSE(
                 "        The Highland formula gives sigma = " << sigma);
             invSigma2 = 1. / std::pow(sigma, 2);
