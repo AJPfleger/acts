@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numbers>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -210,7 +211,7 @@ Acts::Polyhedron Acts::ConeSurface::polyhedronRepresentation(
   // Cone parameters
   double hPhiSec = bounds().get(ConeBounds::eHalfPhiSector);
   double avgPhi = bounds().get(ConeBounds::eAveragePhi);
-  bool fullCone = (hPhiSec == M_PI);
+  bool fullCone = (hPhiSec == std::numbers::pi);
 
   // Get the phi segments from the helper
   auto phiSegs = fullCone ? detail::VerticesHelper::phiSegments()

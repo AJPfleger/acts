@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -27,10 +28,11 @@ namespace Acts::detail::VerticesHelper {
 /// @param phiRef is a vector of reference phi values to be included as well
 /// @param phiTolerance is the tolerance for reference phi insertion
 /// @return a vector
-std::vector<ActsScalar> phiSegments(ActsScalar phiMin = -M_PI,
-                                    ActsScalar phiMax = M_PI,
-                                    const std::vector<ActsScalar>& phiRefs = {},
-                                    ActsScalar phiTolerance = 1e-6);
+std::vector<ActsScalar> phiSegments(
+    ActsScalar phiMin = -std::numbers::pi_v<ActsScalar>,
+    ActsScalar phiMax = std::numbers::pi_v<ActsScalar>,
+    const std::vector<ActsScalar>& phiRefs = {},
+    ActsScalar phiTolerance = 1e-6);
 
 /// Helper method to create a regular 2 or 3 D segment
 ///  between two phi values
@@ -53,8 +55,8 @@ void createSegment(std::vector<vertex_t>& vertices,
                    const vertex_t& offset = vertex_t::Zero(),
                    const transform_t& transform = transform_t::Identity()) {
   // Calculate the number of segments - 1 is the minimum
-  unsigned int segs =
-      static_cast<unsigned int>(std::abs(phi2 - phi1) / (2 * M_PI) * lseg);
+  unsigned int segs = static_cast<unsigned int>(
+      std::abs(phi2 - phi1) / (2 * std::numbers::pi_v<ActsScalar>)*lseg);
   segs = segs > 0 ? segs : 1;
   ActsScalar phistep = (phi2 - phi1) / segs;
   // Create the segments
@@ -79,11 +81,10 @@ void createSegment(std::vector<vertex_t>& vertices,
 /// @param halfPhi The half phi sector if sector
 /// @param lseg The number of segments for for a full 2*pi segment
 /// @return a vector of 2d-vectors
-std::vector<Vector2> ellipsoidVertices(ActsScalar innerRx, ActsScalar innerRy,
-                                       ActsScalar outerRx, ActsScalar outerRy,
-                                       ActsScalar avgPhi = 0.,
-                                       ActsScalar halfPhi = M_PI,
-                                       unsigned int lseg = 1);
+std::vector<Vector2> ellipsoidVertices(
+    ActsScalar innerRx, ActsScalar innerRy, ActsScalar outerRx,
+    ActsScalar outerRy, ActsScalar avgPhi = 0.,
+    ActsScalar halfPhi = std::numbers::pi_v<ActsScalar>, unsigned int lseg = 1);
 
 /// Construct vertices on an disc/wheel-like bound object.
 ///
@@ -93,10 +94,9 @@ std::vector<Vector2> ellipsoidVertices(ActsScalar innerRx, ActsScalar innerRy,
 /// @param halfPhi The half phi sector if sector
 /// @param lseg The number of segments for for a full 2*pi segment
 /// @return a vector of 2d-vectors
-std::vector<Vector2> circularVertices(ActsScalar innerR, ActsScalar outerR,
-                                      ActsScalar avgPhi = 0.,
-                                      ActsScalar halfPhi = M_PI,
-                                      unsigned int lseg = 1);
+std::vector<Vector2> circularVertices(
+    ActsScalar innerR, ActsScalar outerR, ActsScalar avgPhi = 0.,
+    ActsScalar halfPhi = std::numbers::pi_v<ActsScalar>, unsigned int lseg = 1);
 /// Check if the point is inside the polygon w/o any tolerances.
 ///
 /// @tparam vertex_container_t is an iterable container

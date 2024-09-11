@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
 /// This tests the intersection with cylinders
 /// and looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
-  double alpha = 0.25 * M_PI;
+  double alpha = 0.25 * std::numbers::pi;
 
   auto testConeIntersection = [&](const Transform3& transform) -> void {
     // A cone surface ready to use

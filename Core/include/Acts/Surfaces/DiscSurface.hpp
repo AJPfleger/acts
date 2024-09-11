@@ -25,6 +25,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <string>
 
 namespace Acts {
@@ -64,7 +65,7 @@ class DiscSurface : public RegularSurface {
   /// @param hphisec The opening angle of the disc surface and is optional
   ///        the default is a full disc
   DiscSurface(const Transform3& transform, double rmin, double rmax,
-              double hphisec = M_PI);
+              double hphisec = std::numbers::pi);
 
   /// Constructor for Discs from Transform3, \f$ r_{min}, r_{max}, hx_{min},
   /// hx_{max} \f$
@@ -313,7 +314,7 @@ class DiscSurface : public RegularSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lseg Number of segments along curved lines, it represents
-  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
+  /// the full 2*PI coverange, if lseg is set to 1 only the extrema
   /// are given
   ///
   /// @return A list of vertices and a face/facett description of it

@@ -27,6 +27,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <string>
 
 namespace Acts {
@@ -57,7 +58,7 @@ class CylinderSurface : public RegularSurface {
   /// @param bevelMinZ (optional) The bevel on the negative z side
   /// @param bevelMaxZ (optional) The bevel on the positive z sid The bevel on the positive z side
   CylinderSurface(const Transform3& transform, double radius, double halfz,
-                  double halfphi = M_PI, double avphi = 0.,
+                  double halfphi = std::numbers::pi, double avphi = 0.,
                   double bevelMinZ = 0., double bevelMaxZ = 0.);
 
   /// Constructor from Transform3 and CylinderBounds arguments
@@ -216,7 +217,7 @@ class CylinderSurface : public RegularSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lseg Number of segments along curved lines, it represents
-  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
+  /// the full 2*PI coverange, if lseg is set to 1 only the extrema
   /// are given
   ///
   /// @return A list of vertices and a face/facett description of it

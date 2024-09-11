@@ -9,6 +9,7 @@
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 
 #include <cmath>
+#include <numbers>
 
 namespace ActsExamples::Generic {
 
@@ -22,8 +23,8 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
   std::vector<Acts::Vector3> mPositions;
   mPositions.reserve(nPhiBins * nZbins);
   // prep work
-  double phiStep = 2 * M_PI / nPhiBins;
-  double minPhi = -M_PI + 0.5 * phiStep;
+  double phiStep = 2 * std::numbers::pi / nPhiBins;
+  double minPhi = -std::numbers::pi + 0.5 * phiStep;
   double zStart = -0.5 * (nZbins - 1) * (2 * moduleHalfLength - lOverlap);
   double zStep = 2 * std::abs(zStart) / (nZbins - 1);
   // loop over the bins
@@ -102,8 +103,8 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
   std::vector<Acts::Vector3> rPositions;
   rPositions.reserve(nPhiBins);
   // prep work
-  double phiStep = 2 * M_PI / nPhiBins;
-  double minPhi = -M_PI + 0.5 * phiStep;
+  double phiStep = 2 * std::numbers::pi / nPhiBins;
+  double minPhi = -std::numbers::pi + 0.5 * phiStep;
   // phi loop
   for (std::size_t iphi = 0; iphi < static_cast<std::size_t>(nPhiBins);
        ++iphi) {
@@ -124,8 +125,8 @@ std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
     double phi = minPhi + iphi * phiStep;
     // main z position depending on phi bin
     double rz = (iphi % 2) != 0u ? z - 0.5 * phiStagger : z + 0.5 * phiStagger;
-    rPositions.push_back(
-        Acts::Vector3(radius * cos(phi), radius * sin(phi), rz + rzs));
+    rPositions.push_back(Acts::Vector3(radius * std::cos(phi),
+                                       radius * std::sin(phi), rz + rzs));
   }
   return rPositions;
 }

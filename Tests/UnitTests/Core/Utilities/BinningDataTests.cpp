@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <numbers>
 #include <utility>
 #include <vector>
 
@@ -30,7 +31,7 @@ Vector3 eta0Position(0.5, 1.5, 0.);
 // the test positions in 2D
 Vector2 xyPosition(0.5, 1.5);
 Vector2 rphizPosition(0.1, 2.5);
-Vector2 rphiPosition(3.5, M_PI / 8.);
+Vector2 rphiPosition(3.5, std::numbers::pi / 8.);
 
 // the binnings - equidistant
 // x/y/zData
@@ -64,14 +65,15 @@ std::vector<float> values = {0., 1., 2., 3., 4., 10.};
 BinningData xData_arb(open, BinningValue::binX, values);
 BinningData yData_arb(open, BinningValue::binY, values);
 // | -M_PI |  -2 |  -1 |  1 |  2 |  M_PI |
-std::vector<float> phiValues = {-M_PI, -2., -1., 1., 2., M_PI};
+std::vector<float> phiValues = {-std::numbers::pi_v<float>, -2., -1., 1., 2.,
+                                std::numbers::pi_v<float>};
 BinningData phiData_arb(closed, BinningValue::binPhi, phiValues);
 
 // the binnings - arbitrary when switching to binary search - for boundary
 // sizes >= 50
 std::size_t nBins_binary = 59;
 double valueMin = 0.;
-double phiMin = -M_PI;
+double phiMin = -std::numbers::pi;
 double delta = 0.5;
 double phiDelta = 0.1064;
 

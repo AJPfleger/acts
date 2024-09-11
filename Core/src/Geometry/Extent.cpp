@@ -15,13 +15,14 @@
 #include <cstddef>
 #include <iomanip>
 #include <limits>
+#include <numbers>
 
 Acts::Extent::Extent(const ExtentEnvelope& envelope)
     : m_constrains(0), m_envelope(envelope) {
   m_range[toUnderlying(BinningValue::binR)] =
       Range1D<ActsScalar>(0., std::numeric_limits<ActsScalar>::max());
   m_range[toUnderlying(BinningValue::binPhi)] =
-      Range1D<ActsScalar>(-M_PI, M_PI);
+      Range1D<ActsScalar>(-std::numbers::pi, std::numbers::pi);
   m_range[toUnderlying(BinningValue::binRPhi)] =
       Range1D<ActsScalar>(0., std::numeric_limits<ActsScalar>::max());
   m_range[toUnderlying(BinningValue::binMag)] =

@@ -18,6 +18,8 @@
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/InternalNavigation.hpp"
 
+#include <numbers>
+
 #include <GeoModelKernel/GeoBox.h>
 #include <GeoModelKernel/GeoPcon.h>
 #include <GeoModelKernel/GeoShapeShift.h>
@@ -97,7 +99,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
         // y axis in ACTS is z axis in geomodel
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(x1, x2, z, y1);
-        constexpr double rotationAngle = M_PI / 2;
+        constexpr double rotationAngle = std::numbers::pi / 2.;
         GeoTrf::Transform3D newTransform =
             transform * GeoTrf::RotateX3D(rotationAngle);
         return Experimental::DetectorVolumeFactory::construct(
@@ -107,7 +109,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
       } else {
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(x2, x1, z, y1);
-        constexpr double rotationAngle = M_PI;
+        constexpr double rotationAngle = std::numbers::pi;
         GeoTrf::Transform3D newTransform = transform *
                                            GeoTrf::RotateY3D(rotationAngle) *
                                            GeoTrf::RotateZ3D(rotationAngle);
@@ -120,7 +122,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
       if (y1 < y2) {
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(y1, y2, z, x1);
-        auto rotationAngle = M_PI / 2;
+        const double rotationAngle = std::numbers::pi / 2.;
         GeoTrf::Transform3D newTransform = transform *
                                            GeoTrf::RotateZ3D(rotationAngle) *
                                            GeoTrf::RotateX3D(rotationAngle);
@@ -131,7 +133,7 @@ std::shared_ptr<Experimental::DetectorVolume> convertVolume(
       } else {
         std::shared_ptr<TrapezoidVolumeBounds> bounds =
             std::make_shared<TrapezoidVolumeBounds>(y2, y1, z, x1);
-        auto rotationAngle = M_PI;
+        const double rotationAngle = std::numbers::pi;
         GeoTrf::Transform3D newTransform =
             transform * GeoTrf::RotateX3D(rotationAngle) *
             GeoTrf::RotateZ3D(rotationAngle / 2) *

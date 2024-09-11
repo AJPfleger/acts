@@ -225,9 +225,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceEqualityOperators) {
 /// Unit test for testing PlaneSurface extent via Polyhedron representation
 BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   // First test - non-rotated
-  static const Transform3 planeZX = AngleAxis3(-0.5 * M_PI, Vector3::UnitX()) *
-                                    AngleAxis3(-0.5 * M_PI, Vector3::UnitZ()) *
-                                    Transform3::Identity();
+  static const Transform3 planeZX =
+      AngleAxis3(-0.5 * std::numbers::pi, Vector3::UnitX()) *
+      AngleAxis3(-0.5 * std::numbers::pi, Vector3::UnitZ()) *
+      Transform3::Identity();
 
   double rHx = 2.;
   double rHy = 4.;
@@ -310,7 +311,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceAlignment) {
   auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
   // Test clone method
   Translation3 translation{0., 1., 2.};
-  double rotationAngle = M_PI_2;
+  double rotationAngle = std::numbers::pi / 2.;
   AngleAxis3 rotation(rotationAngle, Vector3::UnitY());
   RotationMatrix3 rotationMat = rotation.toRotationMatrix();
 

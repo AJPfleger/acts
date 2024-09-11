@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <numbers>
 
 std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
     ActsScalar phiMin, ActsScalar phiMax,
@@ -17,9 +18,12 @@ std::vector<Acts::ActsScalar> Acts::detail::VerticesHelper::phiSegments(
   // This is to ensure that the extrema are built regardless of number
   // of segments
   std::vector<ActsScalar> phiSegments;
-  std::vector<ActsScalar> quarters = {-M_PI, -0.5 * M_PI, 0., 0.5 * M_PI, M_PI};
+  std::vector<ActsScalar> quarters = {
+      -std::numbers::pi_v<ActsScalar>, -0.5 * std::numbers::pi_v<ActsScalar>,
+      0., 0.5 * std::numbers::pi_v<ActsScalar>, std::numbers::pi_v<ActsScalar>};
   // It does not cover the full azimuth
-  if (phiMin != -M_PI || phiMax != M_PI) {
+  if (phiMin != -std::numbers::pi_v<ActsScalar> ||
+      phiMax != std::numbers::pi_v<ActsScalar>) {
     phiSegments.push_back(phiMin);
     for (unsigned int iq = 1; iq < 4; ++iq) {
       if (phiMin < quarters[iq] && phiMax > quarters[iq]) {
@@ -58,7 +62,8 @@ std::vector<Acts::Vector2> Acts::detail::VerticesHelper::ellipsoidVertices(
   std::vector<Vector2> overtices;  // outer verices
 
   bool innerExists = (innerRx > 0. && innerRy > 0.);
-  bool closed = std::abs(halfPhi - M_PI) < s_onSurfaceTolerance;
+  bool closed =
+      std::abs(halfPhi - std::numbers::pi_v<ActsScalar>) < s_onSurfaceTolerance;
 
   // Get the phi segments from the helper method
   auto phiSegs = detail::VerticesHelper::phiSegments(

@@ -93,7 +93,7 @@ class StrawSurface : public LineSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lseg Number of segments along curved lines, it represents
-  /// the full 2*M_PI coverange, if lseg is set to 1 only the extrema
+  /// the full 2*PI coverange, if lseg is set to 1 only the extrema
   /// are given @note if lseg is set to 1 then only the straw is created
   ///
   /// @return A list of vertices and a face/facett description of it

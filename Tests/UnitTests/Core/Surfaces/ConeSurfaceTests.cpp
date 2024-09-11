@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <numbers>
 #include <string>
 
 namespace Acts::Test {
@@ -40,7 +41,8 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
   //
   /// Constructor with transform, alpha and symmetry
   /// indicator
-  double alpha{M_PI / 8.}, halfPhiSector{M_PI / 16.}, zMin{1.0}, zMax{10.};
+  double alpha{std::numbers::pi / 8.}, halfPhiSector{std::numbers::pi / 16.},
+      zMin{1.0}, zMax{10.};
   bool symmetric(false);
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
@@ -59,8 +61,8 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
                     Surface::Cone);
 
   /// Constructor with transform and ConeBounds pointer
-  // ConeBounds (double alpha, double zmin, double zmax, double halfphi=M_PI,
-  // double avphi=0.)
+  // ConeBounds (double alpha, double zmin, double zmax, double
+  // halfphi=std::numbers::pi, double avphi=0.)
   auto pConeBounds =
       std::make_shared<const ConeBounds>(alpha, zMin, zMax, halfPhiSector, 0.);
   BOOST_CHECK_EQUAL(
@@ -89,7 +91,9 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceConstruction) {
 /// Unit test for testing ConeSurface properties
 BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   /// Test clone method
-  double alpha{M_PI / 8.} /*,halfPhiSector{M_PI/16.}, zMin{1.0}, zMax{10.}*/;
+  double alpha{
+      std::numbers::pi /
+      8.} /*,halfPhiSector{std::numbers::pi/16.}, zMin{1.0}, zMax{10.}*/;
   bool symmetric(false);
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
@@ -121,7 +125,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   CHECK_CLOSE_ABS(coneSurfaceObject->normal(tgContext, origin), normal3D, 1e-6);
   //
   /// Test normal given 2D rphi position
-  Vector2 positionPiBy2(1.0, M_PI / 2.);
+  Vector2 positionPiBy2(1.0, std::numbers::pi / 2.);
   Vector3 normalAtPiBy2{0.0312768, 0.92335, -0.382683};
 
   CHECK_CLOSE_OR_SMALL(coneSurfaceObject->normal(tgContext, positionPiBy2),
@@ -136,7 +140,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   BOOST_CHECK_EQUAL(coneSurfaceObject->bounds().type(), SurfaceBounds::eCone);
   //
   /// Test localToGlobal
-  Vector2 localPosition{1.0, M_PI / 2.0};
+  Vector2 localPosition{1.0, std::numbers::pi / 2.};
   globalPosition =
       coneSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
   // std::cout<<globalPosition<<std::endl;
@@ -149,7 +153,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
       coneSurfaceObject->globalToLocal(tgContext, globalPosition, momentum)
           .value();
   // std::cout<<localPosition<<std::endl;
-  Vector2 expectedLocalPosition{1.0, M_PI / 2.0};
+  Vector2 expectedLocalPosition{1.0, std::numbers::pi / 2.};
 
   CHECK_CLOSE_REL(localPosition, expectedLocalPosition, 1e-6);
   //
@@ -185,7 +189,9 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
 }
 
 BOOST_AUTO_TEST_CASE(ConeSurfaceEqualityOperators) {
-  double alpha{M_PI / 8.} /*, halfPhiSector{M_PI/16.}, zMin{1.0}, zMax{10.}*/;
+  double alpha{
+      std::numbers::pi /
+      8.} /*, halfPhiSector{std::numbers::pi/16.}, zMin{1.0}, zMax{10.}*/;
   bool symmetric(false);
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
@@ -209,7 +215,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceEqualityOperators) {
 }
 
 BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
-  double alpha{M_PI / 8.}, zMin{0.}, zMax{10.};
+  double alpha{std::numbers::pi / 8.}, zMin{0.}, zMax{10.};
 
   Translation3 translation{0., 0., 0.};
 
@@ -238,7 +244,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
                   s_onSurfaceTolerance);
 
   // Now a sector
-  double halfPhiSector = M_PI / 8.;
+  double halfPhiSector = std::numbers::pi / 8.;
   pConeBounds =
       std::make_shared<const ConeBounds>(alpha, zMin, zMax, halfPhiSector, 0.);
   pCone = Surface::makeShared<ConeSurface>(pTransform, pConeBounds);
@@ -256,7 +262,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceExtent) {
 
 /// Unit test for testing ConeSurface alignment derivatives
 BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
-  double alpha{M_PI / 8.};
+  double alpha{std::numbers::pi / 8.};
   bool symmetric(false);
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
@@ -279,7 +285,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceAlignment) {
                                                               globalPosition);
   // Check if the result is as expected
   ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
-  expLoc3DToLocBound << -1, 0, M_PI / 2. * std::tan(alpha), 0, 0, 1;
+  expLoc3DToLocBound << -1, 0, std::numbers::pi / 2. * std::tan(alpha), 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
 }
 

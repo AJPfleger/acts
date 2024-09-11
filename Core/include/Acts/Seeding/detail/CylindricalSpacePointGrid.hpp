@@ -14,6 +14,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/Grid.hpp"
 
+#include <numbers>
 #include <vector>
 
 namespace Acts {
@@ -55,11 +56,11 @@ struct CylindricalSpacePointGridConfig {
   // maximum impact parameter in mm
   float impactMax = 0;
   // minimum phi value for phiAxis construction
-  float phiMin = -M_PI;
+  float phiMin = -std::numbers::pi_v<float>;
   // maximum phi value for phiAxis construction
-  float phiMax = M_PI;
+  float phiMax = std::numbers::pi_v<float>;
   // Multiplicator for the number of phi-bins. The minimum number of phi-bins
-  // depends on min_pt, magnetic field: 2*M_PI/(minPT particle phi-deflection).
+  // depends on min_pt, magnetic field: 2*PI/(minPT particle phi-deflection).
   // phiBinDeflectionCoverage is a multiplier for this number. If
   // numPhiNeighbors (in the configuration of the BinFinders) is configured to
   // return 1 neighbor on either side of the current phi-bin (and you want to

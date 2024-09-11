@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <cmath>
+#include <numbers>
 #include <system_error>
 
 #include <Eigen/Eigenvalues>
@@ -84,8 +85,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::sortSpacepoints(
   for (const auto& sp : spacepoints) {
     // phi will be saved for later
     Acts::ActsScalar phi = detail::radian_pos(std::atan2(sp.y(), sp.x()));
-    std::uint32_t phislice =
-        static_cast<std::uint32_t>(phi / (2 * M_PI) * m_cfg.numPhiSlices);
+    std::uint32_t phislice = static_cast<std::uint32_t>(
+        phi / (2 * std::numbers::pi) * m_cfg.numPhiSlices);
     if (phislice >= m_cfg.numPhiSlices) {
       phislice = 0;
     }
@@ -133,7 +134,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
 
   std::uint32_t phiStep =
       static_cast<std::uint32_t>(m_cfg.maxPhideviation /
-                                 (2 * M_PI / m_cfg.numPhiSlices)) +
+                                 (2 * std::numbers::pi / m_cfg.numPhiSlices)) +
       1;
 
   // calculate limits for middle spacepoints
@@ -193,7 +194,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
     Acts::ActsScalar angleZfrom =
         std::atan2(rMiddle[isLessFrom], deltaZfrom) + m_cfg.maxXYZdeviation;
     std::uint32_t nearZFrom = 0;
-    if (angleZfrom < M_PI) {
+    if (angleZfrom < std::numbers::pi_v<Acts::ActsScalar>) {
       Acts::ActsScalar new_deltaZfrom =
           rMiddle[isLessFrom] / std::tan(angleZfrom) / zBinLength;
       nearZFrom = static_cast<std::uint32_t>(std::max(
@@ -225,7 +226,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
           std::atan2(rFarDelta[isMiddleLess], delta2Zfrom) +
           m_cfg.maxXYZdeviation;
       std::uint32_t farZFrom = 0;
-      if (angle2Zfrom < M_PI) {
+      if (angle2Zfrom < std::numbers::pi_v<Acts::ActsScalar>) {
         farZFrom = static_cast<std::uint32_t>(std::max(
             (rFarDelta[isMiddleLess] / std::tan(angle2Zfrom) / zBinLength) +
                 middleZ,
@@ -286,8 +287,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
                 for (const auto& middleSP :
                      sortedSpacepoints.getSP(1, middlePhi, middleZ)) {
                   Acts::ActsScalar phiB = middleSP.second;
-                  Acts::ActsScalar deltaPhiAB =
-                      detail::difference_periodic(phiA, phiB, 2 * M_PI);
+                  Acts::ActsScalar deltaPhiAB = detail::difference_periodic(
+                      phiA, phiB, 2 * std::numbers::pi_v<Acts::ActsScalar>);
                   if (std::abs(deltaPhiAB) > m_cfg.maxPhideviation) {
                     continue;
                   }
@@ -296,8 +297,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findTriplets(
                   for (const auto& farSP :
                        sortedSpacepoints.getSP(2, farPhi, farZ)) {
                     Acts::ActsScalar phiC = farSP.second;
-                    Acts::ActsScalar deltaPhiBC =
-                        detail::difference_periodic(phiB, phiC, 2 * M_PI);
+                    Acts::ActsScalar deltaPhiBC = detail::difference_periodic(
+                        phiB, phiC, 2 * std::numbers::pi_v<Acts::ActsScalar>);
                     if (std::abs(deltaPhiBC) > m_cfg.maxPhideviation) {
                       continue;
                     }
@@ -331,8 +332,8 @@ bool Acts::SingleSeedVertexFinder<spacepoint_t>::tripletValidationAndUpdate(
   Acts::ActsScalar alpha2 =
       std::atan2(triplet.b.y() - triplet.c.y(), triplet.b.x() - triplet.c.x());
   // these two slopes shouldn't be too different
-  Acts::ActsScalar deltaAlpha =
-      detail::difference_periodic(alpha1, alpha2, 2 * M_PI);
+  Acts::ActsScalar deltaAlpha = detail::difference_periodic(
+      alpha1, alpha2, 2 * std::numbers::pi_v<Acts::ActsScalar>);
   if (std::abs(deltaAlpha) > m_cfg.maxXYdeviation) {
     return false;
   }
