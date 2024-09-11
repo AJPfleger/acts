@@ -26,8 +26,8 @@ enum MaterialClassificationNumberIndices {
 constexpr double kAvogadro = 6.02214076e23 / Acts::UnitConstants::mol;
 }  // namespace
 
-Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
-                                               float z, float massRho) {
+Acts::Material Acts::Material::fromMassDensity(double x0, double l0, double ar,
+                                               double z, double massRho) {
   using namespace Acts::UnitLiterals;
 
   Material mat;
@@ -51,8 +51,8 @@ Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
   return mat;
 }
 
-Acts::Material Acts::Material::fromMolarDensity(float x0, float l0, float ar,
-                                                float z, float molarRho) {
+Acts::Material Acts::Material::fromMolarDensity(double x0, double l0, double ar,
+                                                double z, double molarRho) {
   Material mat;
   mat.m_x0 = x0;
   mat.m_l0 = l0;
@@ -69,7 +69,7 @@ Acts::Material::Material(const ParametersVector& parameters)
       m_z(parameters[eNuclearCharge]),
       m_molarRho(parameters[eMolarDensity]) {}
 
-float Acts::Material::massDensity() const {
+double Acts::Material::massDensity() const {
   using namespace Acts::UnitLiterals;
 
   // perform computations in double precision to avoid loss of precision
@@ -78,7 +78,7 @@ float Acts::Material::massDensity() const {
   return atomicMass * numberDensity;
 }
 
-float Acts::Material::meanExcitationEnergy() const {
+double Acts::Material::meanExcitationEnergy() const {
   using namespace Acts::UnitLiterals;
 
   // use approximative computation as defined in ATL-SOFT-PUB-2008-003

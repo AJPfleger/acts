@@ -45,7 +45,7 @@ struct BetheBloch {
     const float qOverP = particle.qOverP();
     const float absQ = particle.absoluteCharge();
     // most probable value
-    const float energyLoss =
+    const double energyLoss =
         Acts::computeEnergyLossLandau(slab, m, qOverP, absQ);
     // Gaussian-equivalent sigma
     const float energyLossSigma =

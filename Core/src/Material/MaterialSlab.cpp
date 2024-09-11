@@ -18,12 +18,12 @@
 namespace Acts {
 
 namespace {
-static constexpr auto eps = 2 * std::numeric_limits<float>::epsilon();
+static constexpr auto eps = 2 * std::numeric_limits<double>::epsilon();
 }
 
-MaterialSlab::MaterialSlab(float thickness) : m_thickness(thickness) {}
+MaterialSlab::MaterialSlab(double thickness) : m_thickness(thickness) {}
 
-MaterialSlab::MaterialSlab(const Material& material, float thickness)
+MaterialSlab::MaterialSlab(const Material& material, double thickness)
     : m_material(material),
       m_thickness(thickness),
       m_thicknessInX0((eps < material.X0()) ? (thickness / material.X0()) : 0),
@@ -55,7 +55,7 @@ MaterialSlab MaterialSlab::averageLayers(
   return result;
 }
 
-void MaterialSlab::scaleThickness(float scale) {
+void MaterialSlab::scaleThickness(double scale) {
   if (scale < 0) {
     throw std::runtime_error("scale < 0");
   }
