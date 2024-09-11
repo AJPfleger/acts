@@ -35,6 +35,7 @@
 #include <cmath>
 #include <initializer_list>
 #include <memory>
+#include <numbers>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -170,7 +171,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
           .value();
   //
   /// Test localPolarToCartesian
-  Vector2 rPhi1_1{std::sqrt(2.), M_PI / 4.};
+  Vector2 rPhi1_1{std::numbers::sqrt2, M_PI / 4.};
   Vector2 cartesian1_1{1., 1.};
   CHECK_CLOSE_REL(discSurfaceObject->localPolarToCartesian(rPhi1_1),
                   cartesian1_1, 1e-6);
@@ -195,13 +196,13 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
       cartesian1_1, 1e-6);
   //
   /// Test pathCorrection
-  double projected3DMomentum = std::sqrt(3.) * 1.e6;
+  double projected3DMomentum = std::numbers::sqrt3 * 1.e6;
   Vector3 momentum{projected3DMomentum, projected3DMomentum,
                    projected3DMomentum};
   Vector3 ignoredPosition = discSurfaceObject->center(tgContext);
   CHECK_CLOSE_REL(discSurfaceObject->pathCorrection(tgContext, ignoredPosition,
                                                     momentum.normalized()),
-                  std::sqrt(3), 0.01);
+                  std::numbers::sqrt3, 0.01);
   //
   /// intersection test
   Vector3 globalPosition{1.2, 0.0, -10.};

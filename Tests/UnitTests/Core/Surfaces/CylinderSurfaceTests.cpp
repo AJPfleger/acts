@@ -34,6 +34,7 @@
 #include <cmath>
 #include <initializer_list>
 #include <memory>
+#include <numbers>
 #include <ostream>
 #include <string>
 #include <utility>
@@ -212,7 +213,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   /// Test pathCorrection
   CHECK_CLOSE_REL(cylinderSurfaceObject->pathCorrection(testContext, offSurface,
                                                         momentum.normalized()),
-                  std::sqrt(3.), 0.01);
+                  std::numbers::sqrt3, 0.01);
   //
   /// Test name
   BOOST_CHECK_EQUAL(cylinderSurfaceObject->name(),
