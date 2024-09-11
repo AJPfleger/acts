@@ -381,13 +381,11 @@ struct EigenStepperDenseExtension {
     MaterialSlab slab(material, 1);
     // Use the same energy loss throughout the step.
     if (state.options.stepping.dense.meanEnergyLoss) {
-      g = -computeEnergyLossMean(slab, absPdg, mass, static_cast<float>(qop[0]),
-                                 absQ);
+      g = -computeEnergyLossMean(slab, absPdg, mass, qop[0], absQ);
     } else {
       // TODO using the unit path length is not quite right since the most
       //      probably energy loss is not independent from the path length.
-      g = -computeEnergyLossMode(slab, absPdg, mass, static_cast<float>(qop[0]),
-                                 absQ);
+      g = -computeEnergyLossMode(slab, absPdg, mass, qop[0], absQ);
     }
     // Change of the momentum per path length
     // dPds = dPdE * dEds
@@ -397,12 +395,12 @@ struct EigenStepperDenseExtension {
       // inverse momentum
       if (state.options.stepping.dense.includeGradient) {
         if (state.options.stepping.dense.meanEnergyLoss) {
-          dgdqopValue = deriveEnergyLossMeanQOverP(
-              slab, absPdg, mass, static_cast<float>(qop[0]), absQ);
+          dgdqopValue =
+              deriveEnergyLossMeanQOverP(slab, absPdg, mass, qop[0], absQ);
         } else {
           // TODO path length dependence; see above
-          dgdqopValue = deriveEnergyLossModeQOverP(
-              slab, absPdg, mass, static_cast<float>(qop[0]), absQ);
+          dgdqopValue =
+              deriveEnergyLossModeQOverP(slab, absPdg, mass, qop[0], absQ);
         }
       }
       // Calculate term for later error propagation

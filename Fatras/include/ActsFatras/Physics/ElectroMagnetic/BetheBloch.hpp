@@ -48,7 +48,7 @@ struct BetheBloch {
     const float energyLoss =
         Acts::computeEnergyLossLandau(slab, m, qOverP, absQ);
     // Gaussian-equivalent sigma
-    const float energyLossSigma =
+    const double energyLossSigma =
         Acts::computeEnergyLossLandauSigma(slab, m, qOverP, absQ);
 
     // Simulate the energy loss

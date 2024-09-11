@@ -38,7 +38,7 @@ void PointwiseMaterialInteraction::covarianceContributions(
   }
   // TODO just ionisation loss or full energy loss?
   if (energyLoss) {
-    const float sigmaQoverP =
+    const double sigmaQoverP =
         computeEnergyLossLandauSigmaQOverP(slab, mass, qOverP, absQ);
     varianceQoverP = sigmaQoverP * sigmaQoverP;
   }
