@@ -20,7 +20,7 @@ struct NuclearInteractionParameters {
       std::pair<std::vector<float>, std::vector<std::uint32_t>>;
   using Distributions = std::vector<CumulativeDistribution>;
   using PdgMap =
-      std::vector<std::pair<int, std::vector<std::pair<int, float>>>>;
+      std::vector<std::pair<int, std::vector<std::pair<int, double>>>>;
 
   /// @brief Nested struct for the storage of the kinematic parametrisations for
   /// a given final state multiplicity
