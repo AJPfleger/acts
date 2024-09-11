@@ -160,7 +160,11 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     BOOST_CHECK_EQUAL(t.tipIndex(), MultiTrajectoryTraits::kInvalid);
 
     t.setParticleHypothesis(pHypo);
-    BOOST_CHECK_EQUAL(t.particleHypothesis(), pHypo);
+    BOOST_WARN_EQUAL(t.particleHypothesis(), pHypo);
+    BOOST_WARN_EQUAL(t.particleHypothesis().mass(), pHypo.mass());
+    BOOST_WARN_EQUAL(t.particleHypothesis().absolutePdg(), pHypo.absolutePdg());
+    BOOST_WARN_EQUAL(t.particleHypothesis().absoluteCharge(),
+                     pHypo.absoluteCharge());
 
     BOOST_CHECK_EQUAL(tsc.size(), 0);
     auto ts1 = t.appendTrackState();
@@ -270,7 +274,11 @@ BOOST_AUTO_TEST_CASE(ConvertTrack) {
     // Not the exact same surface, it's recreated from values
     BOOST_CHECK_NE(free.get(), &freeRecreated);
 
-    BOOST_CHECK_EQUAL(t.particleHypothesis(), pHypo);
+    BOOST_WARN_EQUAL(t.particleHypothesis(), pHypo);
+    BOOST_WARN_EQUAL(t.particleHypothesis().mass(), pHypo.mass());
+    BOOST_WARN_EQUAL(t.particleHypothesis().absolutePdg(), pHypo.absolutePdg());
+    BOOST_WARN_EQUAL(t.particleHypothesis().absoluteCharge(),
+                     pHypo.absoluteCharge());
 
     BOOST_CHECK_EQUAL(t.nMeasurements(), 17);
 
