@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <numbers>
 
 using Acts::Vector3;
 
@@ -76,17 +77,21 @@ BOOST_AUTO_TEST_CASE(DirectionPhiEta) {
   const auto mixed1 = makeDirectionFromPhiEta(M_PI_4, 1.0);
   CHECK_CLOSE_REL(mixed1.norm(), 1, eps);
   CHECK_CLOSE_REL(
-      mixed1.dot(Vector3(1, 1, M_SQRT2 * std::sinh(1.0)).normalized()), 1, eps);
+      mixed1.dot(
+          Vector3(1, 1, std::numbers::sqrt2 * std::sinh(1.0)).normalized()),
+      1, eps);
   const auto mixed2 = makeDirectionFromPhiEta(M_PI_4, -1.0);
   CHECK_CLOSE_REL(mixed2.norm(), 1, eps);
   CHECK_CLOSE_REL(
-      mixed2.dot(Vector3(1, 1, M_SQRT2 * std::sinh(-1.0)).normalized()), 1,
-      eps);
+      mixed2.dot(
+          Vector3(1, 1, std::numbers::sqrt2 * std::sinh(-1.0)).normalized()),
+      1, eps);
   const auto mixed3 = makeDirectionFromPhiEta(-M_PI_4, -1.0);
   CHECK_CLOSE_REL(mixed3.norm(), 1, eps);
   CHECK_CLOSE_REL(
-      mixed3.dot(Vector3(1, -1, M_SQRT2 * std::sinh(-1.0)).normalized()), 1,
-      eps);
+      mixed3.dot(
+          Vector3(1, -1, std::numbers::sqrt2 * std::sinh(-1.0)).normalized()),
+      1, eps);
 }
 
 BOOST_AUTO_TEST_CASE(DirectionPhiTheta) {
@@ -139,13 +144,16 @@ BOOST_AUTO_TEST_CASE(DirectionPhiTheta) {
   // mixed direction
   const auto mixed1 = makeDirectionFromPhiTheta(M_PI_4, M_PI_4);
   CHECK_CLOSE_REL(mixed1.norm(), 1, eps);
-  CHECK_CLOSE_REL(mixed1.dot(Vector3(1, 1, M_SQRT2).normalized()), 1, eps);
+  CHECK_CLOSE_REL(mixed1.dot(Vector3(1, 1, std::numbers::sqrt2).normalized()),
+                  1, eps);
   const auto mixed2 = makeDirectionFromPhiTheta(M_PI_4, 3 * M_PI_4);
   CHECK_CLOSE_REL(mixed2.norm(), 1, eps);
-  CHECK_CLOSE_REL(mixed2.dot(Vector3(1, 1, -M_SQRT2).normalized()), 1, eps);
+  CHECK_CLOSE_REL(mixed2.dot(Vector3(1, 1, -std::numbers::sqrt2).normalized()),
+                  1, eps);
   const auto mixed3 = makeDirectionFromPhiTheta(-M_PI_4, 3 * M_PI_4);
   CHECK_CLOSE_REL(mixed3.norm(), 1, eps);
-  CHECK_CLOSE_REL(mixed3.dot(Vector3(1, -1, -M_SQRT2).normalized()), 1, eps);
+  CHECK_CLOSE_REL(mixed3.dot(Vector3(1, -1, -std::numbers::sqrt2).normalized()),
+                  1, eps);
 }
 
 namespace {
