@@ -17,20 +17,20 @@
 namespace Acts {
 
 struct ParticleData {
-  float charge{};
-  float mass{};
+  double charge{};
+  double mass{};
   std::string_view name;
 };
 
 /// Find the charge for a given PDG particle number.
 ///
 /// @return Charge in native units.
-std::optional<float> findCharge(PdgParticle pdg);
+std::optional<double> findCharge(PdgParticle pdg);
 
 /// Find the mass for a given PDG particle number.
 ///
 /// @return Mass in native units.
-std::optional<float> findMass(PdgParticle pdg);
+std::optional<double> findMass(PdgParticle pdg);
 
 /// Find a descriptive particle name for a given PDG particle number.
 ///
