@@ -41,14 +41,14 @@ struct BetheBloch {
                                      const Acts::MaterialSlab &slab,
                                      Particle &particle) const {
     // compute energy loss distribution parameters
-    const float m = particle.mass();
-    const float qOverP = particle.qOverP();
-    const float absQ = particle.absoluteCharge();
+    const double m = particle.mass();
+    const double qOverP = particle.qOverP();
+    const double absQ = particle.absoluteCharge();
     // most probable value
     const double energyLoss =
         Acts::computeEnergyLossLandau(slab, m, qOverP, absQ);
     // Gaussian-equivalent sigma
-    const float energyLossSigma =
+    const double energyLossSigma =
         Acts::computeEnergyLossLandauSigma(slab, m, qOverP, absQ);
 
     // Simulate the energy loss

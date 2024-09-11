@@ -25,7 +25,7 @@ namespace Acts {
 class SinglyChargedParticleHypothesis
     : public GenericParticleHypothesis<SinglyCharged> {
  public:
-  constexpr SinglyChargedParticleHypothesis(PdgParticle absPdg, float mass)
+  constexpr SinglyChargedParticleHypothesis(PdgParticle absPdg, double mass)
       : GenericParticleHypothesis(absPdg, mass, {}) {}
   SinglyChargedParticleHypothesis(PdgParticle absPdg)
       : GenericParticleHypothesis(absPdg) {}
@@ -68,7 +68,7 @@ class SinglyChargedParticleHypothesis
 /// @note This serves as a factory for common neutral particles.
 class NeutralParticleHypothesis : public GenericParticleHypothesis<Neutral> {
  public:
-  constexpr NeutralParticleHypothesis(PdgParticle absPdg, float mass)
+  constexpr NeutralParticleHypothesis(PdgParticle absPdg, double mass)
       : GenericParticleHypothesis(absPdg, mass, {}) {}
   NeutralParticleHypothesis(PdgParticle absPdg)
       : GenericParticleHypothesis(absPdg) {}
@@ -99,7 +99,7 @@ class NeutralParticleHypothesis : public GenericParticleHypothesis<Neutral> {
 class NonNeutralChargedParticleHypothesis
     : public GenericParticleHypothesis<NonNeutralCharge> {
  public:
-  constexpr NonNeutralChargedParticleHypothesis(PdgParticle absPdg, float mass,
+  constexpr NonNeutralChargedParticleHypothesis(PdgParticle absPdg, double mass,
                                                 NonNeutralCharge chargeType)
       : GenericParticleHypothesis(absPdg, mass, chargeType) {}
   NonNeutralChargedParticleHypothesis(PdgParticle absPdg)
@@ -126,7 +126,7 @@ class NonNeutralChargedParticleHypothesis
     return SinglyChargedParticleHypothesis::proton();
   }
 
-  static NonNeutralChargedParticleHypothesis pionLike(float absQ) {
+  static NonNeutralChargedParticleHypothesis pionLike(double absQ) {
     return NonNeutralChargedParticleHypothesis(pion().absolutePdg(),
                                                pion().mass(), absQ);
   }
@@ -135,7 +135,7 @@ class NonNeutralChargedParticleHypothesis
     static const auto cache = chargedGeantino(Acts::UnitConstants::e);
     return cache;
   }
-  static NonNeutralChargedParticleHypothesis chargedGeantino(float absQ) {
+  static NonNeutralChargedParticleHypothesis chargedGeantino(double absQ) {
     return NonNeutralChargedParticleHypothesis(PdgParticle::eInvalid, 0, absQ);
   }
 };
@@ -145,7 +145,7 @@ class NonNeutralChargedParticleHypothesis
 /// @note This serves as a factory for common particles with any kind of charge.
 class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
  public:
-  constexpr ParticleHypothesis(PdgParticle absPdg, float mass,
+  constexpr ParticleHypothesis(PdgParticle absPdg, double mass,
                                AnyCharge chargeType)
       : GenericParticleHypothesis(absPdg, mass, chargeType) {}
   ParticleHypothesis(PdgParticle absPdg) : GenericParticleHypothesis(absPdg) {}
@@ -178,7 +178,7 @@ class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
     return NeutralParticleHypothesis::pion0();
   }
 
-  static ParticleHypothesis pionLike(float absQ) {
+  static ParticleHypothesis pionLike(double absQ) {
     return ParticleHypothesis(pion().absolutePdg(), pion().mass(), absQ);
   }
 
@@ -189,7 +189,7 @@ class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
     static const auto cache = chargedGeantino(Acts::UnitConstants::e);
     return cache;
   }
-  static ParticleHypothesis chargedGeantino(float absQ) {
+  static ParticleHypothesis chargedGeantino(double absQ) {
     return ParticleHypothesis(PdgParticle::eInvalid, 0, absQ);
   }
 };

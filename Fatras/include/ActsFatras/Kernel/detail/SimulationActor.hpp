@@ -267,7 +267,7 @@ struct SimulationActor {
   void interact(const Acts::MaterialSlab &slab, result_type &result) const {
     // run the continuous processes over a fraction of the material. returns
     // true on break condition (same as the underlying physics lists).
-    auto runContinuousPartial = [&, this](float fraction) {
+    auto runContinuousPartial = [&, this](double fraction) {
       Acts::MaterialSlab partialSlab = slab;
       partialSlab.scaleThickness(fraction);
       // material after passing this slab
@@ -313,22 +313,20 @@ struct SimulationActor {
     //   material. simulation is limited to the continuous processes.
     //
     // `clamp` ensures a valid range in all cases.
-    const float fracX0 =
-        std::clamp(static_cast<float>(x0Dist / slabX0), 0.0f, 1.0f);
-    const float fracL0 =
-        std::clamp(static_cast<float>(l0Dist / slabL0), 0.0f, 1.0f);
+    const double fracX0 = std::clamp(x0Dist / slabX0, 0., 1.);
+    const double fracL0 = std::clamp(l0Dist / slabL0, 0., 1.);
     // fraction of the material where the first point-like interaction occurs
-    const float frac = std::min(fracX0, fracL0);
+    const double frac = std::min(fracX0, fracL0);
 
     // do not run if there is zero material before the point-like interaction
-    if (0.0f < frac) {
+    if (0. < frac) {
       // simulate continuous processes before the point-like interaction
       if (runContinuousPartial(frac)) {
         return;
       }
     }
     // do not run if there is no point-like interaction
-    if (frac < 1.0f) {
+    if (frac < 1.) {
       // select which process to simulate
       const std::size_t process =
           (fracX0 < fracL0) ? result.x0Process : result.l0Process;

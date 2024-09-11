@@ -20,7 +20,7 @@ namespace ActsFatras {
 const detail::NuclearInteractionParameters& NuclearInteraction::findParameters(
     double rnd,
     const detail::NuclearInteractionParametrisation& parametrisation,
-    float particleMomentum) const {
+    double particleMomentum) const {
   // Return lowest/highest if momentum outside the boundary
   if (particleMomentum <= parametrisation.front().first) {
     return parametrisation.front().second;
@@ -32,16 +32,16 @@ const detail::NuclearInteractionParameters& NuclearInteraction::findParameters(
   // Find the two neighbouring parametrisations
   const auto lowerBound = std::lower_bound(
       parametrisation.begin(), parametrisation.end(), particleMomentum,
-      [](const std::pair<const float,
+      [](const std::pair<const double,
                          ActsFatras::detail::NuclearInteractionParameters>&
              params,
-         const float mom) { return params.first < mom; });
-  const float momentumUpperNeighbour = lowerBound->first;
-  const float momentumLowerNeighbour = std::prev(lowerBound, 1)->first;
+         const double mom) { return params.first < mom; });
+  const double momentumUpperNeighbour = lowerBound->first;
+  const double momentumLowerNeighbour = std::prev(lowerBound, 1)->first;
 
   // Pick one randomly
-  const float weight = (momentumUpperNeighbour - particleMomentum) /
-                       (momentumUpperNeighbour - momentumLowerNeighbour);
+  const double weight = (momentumUpperNeighbour - particleMomentum) /
+                        (momentumUpperNeighbour - momentumLowerNeighbour);
   return (rnd < weight) ? std::prev(lowerBound, 1)->second : lowerBound->second;
 }  // namespace ActsFatras
 
@@ -113,8 +113,8 @@ unsigned int NuclearInteraction::finalStateMultiplicity(
 
 std::pair<ActsFatras::Particle::Scalar, ActsFatras::Particle::Scalar>
 NuclearInteraction::globalAngle(ActsFatras::Particle::Scalar phi1,
-                                ActsFatras::Particle::Scalar theta1, float phi2,
-                                float theta2) const {
+                                ActsFatras::Particle::Scalar theta1,
+                                double phi2, double theta2) const {
   // Rotation around the global y-axis
   Acts::SquareMatrix3 rotY = Acts::SquareMatrix3::Zero();
   rotY(0, 0) = std::cos(theta1);
@@ -138,22 +138,22 @@ NuclearInteraction::globalAngle(ActsFatras::Particle::Scalar phi1,
   const Acts::Vector3 vectorSum = rotZ * rotY * vector2;
 
   // Calculate the global angles
-  const float theta = std::acos(vectorSum.z() / vectorSum.norm());
-  const float phi = std::atan2(vectorSum.y(), vectorSum.x());
+  const double theta = std::acos(vectorSum.z() / vectorSum.norm());
+  const double phi = std::atan2(vectorSum.y(), vectorSum.x());
 
   return std::make_pair(phi, theta);
 }
 
 bool NuclearInteraction::match(const Acts::ActsDynamicVector& momenta,
                                const Acts::ActsDynamicVector& invariantMasses,
-                               float parametrizedMomentum) const {
+                               double parametrizedMomentum) const {
   const unsigned int size = momenta.size();
   for (unsigned int i = 0; i < size; i++) {
     // Calculate the invariant masses
-    const float momentum = momenta[i];
-    const float invariantMass = invariantMasses[i];
-    const float p1p2 = 2. * momentum * parametrizedMomentum;
-    const float costheta = 1. - invariantMass * invariantMass / p1p2;
+    const double momentum = momenta[i];
+    const double invariantMass = invariantMasses[i];
+    const double p1p2 = 2. * momentum * parametrizedMomentum;
+    const double costheta = 1. - invariantMass * invariantMass / p1p2;
 
     // Abort if an angle cannot be calculated
     if (std::abs(costheta) > 1) {

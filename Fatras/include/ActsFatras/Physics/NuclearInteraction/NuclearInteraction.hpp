@@ -183,7 +183,7 @@ struct NuclearInteraction {
   const detail::NuclearInteractionParameters& findParameters(
       double rnd,
       const detail::NuclearInteractionParametrisation& parametrisation,
-      float particleMomentum) const;
+      double particleMomentum) const;
 
   /// Estimates the interaction type
   ///
@@ -191,7 +191,7 @@ struct NuclearInteraction {
   /// @param [in] probability The probability for a soft interaction
   ///
   /// @return True if a soft interaction occurs
-  inline bool softInteraction(double rnd, float probability) const {
+  inline bool softInteraction(double rnd, double probability) const {
     return rnd <= probability;
   }
 
@@ -248,7 +248,7 @@ struct NuclearInteraction {
       generator_t& generator,
       const detail::NuclearInteractionParameters::
           ParametersWithFixedMultiplicity& parametrisation,
-      float initialMomentum) const;
+      double initialMomentum) const;
 
   /// Tests whether the final state momenta and invariant masses are
   /// matching to each other to allow the evaluation of particle directions.
@@ -261,7 +261,7 @@ struct NuclearInteraction {
   /// not.
   bool match(const Acts::ActsDynamicVector& momenta,
              const Acts::ActsDynamicVector& invariantMasses,
-             float parametrizedMomentum) const;
+             double parametrizedMomentum) const;
 
   /// This method samples the kinematics of the final state particles
   ///
@@ -276,7 +276,7 @@ struct NuclearInteraction {
   sampleKinematics(generator_t& generator,
                    const detail::NuclearInteractionParameters::
                        ParametersWithFixedMultiplicity& parameters,
-                   float momentum) const;
+                   double momentum) const;
 
   /// Converts relative angles to absolute angles wrt the global
   /// coordinate system.
@@ -293,8 +293,8 @@ struct NuclearInteraction {
   /// coordinate system
   std::pair<ActsFatras::Particle::Scalar, ActsFatras::Particle::Scalar>
   globalAngle(ActsFatras::Particle::Scalar phi1,
-              ActsFatras::Particle::Scalar theta1, float phi2,
-              float theta2) const;
+              ActsFatras::Particle::Scalar theta1, double phi2,
+              double theta2) const;
 
   /// Converter from sampled numbers to a vector of particles
   ///
@@ -313,7 +313,7 @@ struct NuclearInteraction {
       generator_t& generator, const std::vector<int>& pdgId,
       const Acts::ActsDynamicVector& momenta,
       const Acts::ActsDynamicVector& invariantMasses, Particle& initialParticle,
-      float parametrizedMomentum, bool soft) const;
+      double parametrizedMomentum, bool soft) const;
 
   /// This function performs an inverse sampling to provide a discrete
   /// value from a distribution.
@@ -357,7 +357,7 @@ std::vector<int> NuclearInteraction::samplePdgIds(
   std::vector<int> pdgIds;
   pdgIds.reserve(multiplicity);
 
-  std::uniform_real_distribution<float> uniformDistribution{0., 1.};
+  std::uniform_real_distribution<double> uniformDistribution{0., 1.};
 
   // Find the producers probability distribution
   auto citProducer = pdgMap.cbegin();
@@ -365,19 +365,19 @@ std::vector<int> NuclearInteraction::samplePdgIds(
     citProducer++;
   }
 
-  const std::vector<std::pair<int, float>>& mapInitial = citProducer->second;
+  const std::vector<std::pair<int, double>>& mapInitial = citProducer->second;
   // Set the first particle depending on the interaction type
   if (soft) {
     // Store the initial particle if the interaction is soft
     pdgIds.push_back(particlePdg);
   } else {
     // Otherwise dice the particle
-    const float rndInitial = uniformDistribution(generator);
+    const double rndInitial = uniformDistribution(generator);
 
     pdgIds.push_back(
         std::lower_bound(mapInitial.begin(), mapInitial.end(), rndInitial,
-                         [](const std::pair<int, float>& element,
-                            float random) { return element.second < random; })
+                         [](const std::pair<int, double>& element,
+                            double random) { return element.second < random; })
             ->first);
   }
 
@@ -391,12 +391,12 @@ std::vector<int> NuclearInteraction::samplePdgIds(
     }
 
     // Set the next particle
-    const std::vector<std::pair<int, float>>& map = citProducer->second;
-    const float rnd = uniformDistribution(generator);
+    const std::vector<std::pair<int, double>>& map = citProducer->second;
+    const double rnd = uniformDistribution(generator);
     pdgIds.push_back(
         std::lower_bound(map.begin(), map.end(), rnd,
-                         [](const std::pair<int, float>& element,
-                            float random) { return element.second < random; })
+                         [](const std::pair<int, double>& element,
+                            double random) { return element.second < random; })
             ->first);
   }
   return pdgIds;
@@ -414,7 +414,7 @@ Acts::ActsDynamicVector NuclearInteraction::sampleInvariantMasses(
 
   // Sample in the eigenspace
   for (unsigned int i = 0; i < size; i++) {
-    float variance = parametrisation.eigenvaluesInvariantMass[i];
+    double variance = parametrisation.eigenvaluesInvariantMass[i];
     std::normal_distribution<Acts::ActsScalar> dist{
         parametrisation.meanInvariantMass[i], sqrtf(variance)};
     parameters[i] = dist(generator);
@@ -436,7 +436,7 @@ Acts::ActsDynamicVector NuclearInteraction::sampleMomenta(
     generator_t& generator,
     const detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity&
         parametrisation,
-    float initialMomentum) const {
+    double initialMomentum) const {
   // The resulting vector
   Acts::ActsDynamicVector parameters;
   const unsigned int size = parametrisation.eigenvaluesMomentum.size();
@@ -444,7 +444,7 @@ Acts::ActsDynamicVector NuclearInteraction::sampleMomenta(
 
   // Sample in the eigenspace
   for (unsigned int i = 0; i < size; i++) {
-    float variance = parametrisation.eigenvaluesMomentum[i];
+    double variance = parametrisation.eigenvaluesMomentum[i];
     std::normal_distribution<Acts::ActsScalar> dist{
         parametrisation.meanMomentum[i], sqrtf(variance)};
     parameters[i] = dist(generator);
@@ -455,15 +455,15 @@ Acts::ActsDynamicVector NuclearInteraction::sampleMomenta(
 
   // Perform the inverse sampling from the distributions
   for (unsigned int i = 0; i < size; i++) {
-    const float cdf = (std::erff(parameters[i]) + 1) * 0.5;
+    const double cdf = (std::erff(parameters[i]) + 1) * 0.5;
     parameters[i] =
         sampleContinuousValues(cdf, parametrisation.momentumDistributions[i]);
   }
 
   // Scale the momenta
   Acts::ActsDynamicVector momenta = parameters.head(size - 1);
-  const float sum = momenta.sum();
-  const float scale = parameters.template tail<1>()(0, 0) / sum;
+  const double sum = momenta.sum();
+  const double scale = parameters.template tail<1>()(0, 0) / sum;
   momenta *= scale * initialMomentum;
   return momenta;
 }
@@ -474,7 +474,7 @@ NuclearInteraction::sampleKinematics(
     generator_t& generator,
     const detail::NuclearInteractionParameters::ParametersWithFixedMultiplicity&
         parameters,
-    float momentum) const {
+    double momentum) const {
   unsigned int trials = 0;
   Acts::ActsDynamicVector invariantMasses =
       sampleInvariantMasses(generator, parameters);
@@ -500,7 +500,7 @@ std::vector<Particle> NuclearInteraction::convertParametersToParticles(
     generator_t& generator, const std::vector<int>& pdgId,
     const Acts::ActsDynamicVector& momenta,
     const Acts::ActsDynamicVector& invariantMasses, Particle& initialParticle,
-    float parametrizedMomentum, bool soft) const {
+    double parametrizedMomentum, bool soft) const {
   std::uniform_real_distribution<double> uniformDistribution{0., 1.};
   const auto& initialDirection = initialParticle.direction();
   const double phi = Acts::VectorHelpers::phi(initialDirection);
@@ -512,10 +512,10 @@ std::vector<Particle> NuclearInteraction::convertParametersToParticles(
 
   // Build the particles
   for (unsigned int i = 0; i < size; i++) {
-    const float momentum = momenta[i];
-    const float invariantMass = invariantMasses[i];
-    const float p1p2 = 2. * momentum * parametrizedMomentum;
-    const float costheta = 1. - invariantMass * invariantMass / p1p2;
+    const double momentum = momenta[i];
+    const double invariantMass = invariantMasses[i];
+    const double p1p2 = 2. * momentum * parametrizedMomentum;
+    const double costheta = 1. - invariantMass * invariantMass / p1p2;
 
     const auto phiTheta =
         globalAngle(phi, theta, uniformDistribution(generator) * 2. * M_PI,

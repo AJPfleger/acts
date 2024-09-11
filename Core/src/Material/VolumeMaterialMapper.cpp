@@ -254,7 +254,8 @@ void Acts::VolumeMaterialMapper::createExtraHits(
   // Computing the extra hits properties based on the mappingStep length
   int volumeStep =
       static_cast<int>(std::floor(properties.thickness() / m_cfg.mappingStep));
-  float remainder = properties.thickness() - m_cfg.mappingStep * volumeStep;
+  const double remainder =
+      properties.thickness() - m_cfg.mappingStep * volumeStep;
   properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
   direction = direction * (m_cfg.mappingStep / direction.norm());
 
@@ -453,7 +454,8 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
       if (currentBinning != mState.materialBin.end() &&
           rmIter->materialSlab.thickness() > 0) {
         // check if there is vacuum between this material point and the last one
-        float vacuumThickness = (rmIter->position - lastPositionEnd).norm();
+        const double vacuumThickness =
+            (rmIter->position - lastPositionEnd).norm();
         if (vacuumThickness > s_epsilon) {
           auto properties = Acts::MaterialSlab(vacuumThickness);
           // creat vacuum hits
@@ -483,7 +485,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
             double distVol = (volIter->position - mTrack.first.first).norm();
             double distSur = (sfIter->position - mTrack.first.first).norm();
             if (distSur - distVol > s_epsilon) {
-              float vacuumThickness =
+              const double vacuumThickness =
                   (sfIter->position - lastPositionEnd).norm();
               // if the last material slab stop before the boundary surface
               // create vacuum hits

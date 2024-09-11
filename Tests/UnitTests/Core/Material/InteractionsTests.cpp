@@ -146,10 +146,10 @@ BOOST_AUTO_TEST_CASE(silicon_landau) {
   const Acts::Material silicon = Acts::Test::makeSilicon();
   const auto thickness = 0.17_cm;
   const auto slab = Acts::MaterialSlab(silicon, thickness);
-  const float m = 105.7_MeV;
-  const float q = -1_e;
-  const float qOverP = q / 10_GeV;
-  const float absQ = std::abs(q);
+  const double m = 105.7_MeV;
+  const double q = -1_e;
+  const double qOverP = q / 10_GeV;
+  const double absQ = std::abs(q);
 
   // Difference is within 5% from PDG value
   const auto dE = computeEnergyLossLandau(slab, m, qOverP, absQ) / 1_MeV;

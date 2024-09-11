@@ -29,13 +29,13 @@ struct VolumeMaterialInteraction {
   /// The particle current direction
   const Vector3 dir = Vector3::Zero();
   /// The particle q/p at the interaction
-  const float qOverP = 0;
+  const double qOverP = 0;
   /// The absolute particle charge
-  const float absQ = 0;
+  const double absQ = 0;
   /// The particle momentum at the interaction
-  const float momentum = 0;
+  const double momentum = 0;
   /// The particle mass
-  const float mass = 0;
+  const double mass = 0;
   /// The particle pdg
   const PdgParticle absPdg = eInvalid;
   /// The covariance transport decision at the interaction

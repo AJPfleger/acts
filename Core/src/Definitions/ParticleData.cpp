@@ -51,18 +51,18 @@ static inline auto findByPdg(std::int32_t pdg, const ColumnContainer& column)
   return column[*index];
 }
 
-static constexpr inline float extractCharge(float value) {
+static constexpr inline double extractCharge(double value) {
   // convert three charge to regular charge in native units
   return (value / 3.0f) * Acts::UnitConstants::e;
 }
 
-static constexpr inline float extractMass(float value) {
+static constexpr inline double extractMass(double value) {
   return value * Acts::UnitConstants::MeV;
 }
 
 }  // namespace
 
-std::optional<float> Acts::findCharge(Acts::PdgParticle pdg) {
+std::optional<double> Acts::findCharge(Acts::PdgParticle pdg) {
   const auto charge =
       findByPdg(static_cast<std::int32_t>(pdg), kParticlesThreeCharge);
   if (!charge) {
@@ -71,7 +71,7 @@ std::optional<float> Acts::findCharge(Acts::PdgParticle pdg) {
   return extractCharge(*charge);
 }
 
-std::optional<float> Acts::findMass(Acts::PdgParticle pdg) {
+std::optional<double> Acts::findMass(Acts::PdgParticle pdg) {
   const auto mass =
       findByPdg(static_cast<std::int32_t>(pdg), kParticlesMassMeV);
   if (!mass) {

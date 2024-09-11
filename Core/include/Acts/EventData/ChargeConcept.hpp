@@ -20,14 +20,14 @@
 namespace Acts {
 
 template <typename C>
-concept ChargeConcept = requires(C c, C c2, float f, double d) {
+concept ChargeConcept = requires(C c, C c2, double f, double d) {
   { C{f} };
 
   { c == c2 } -> std::same_as<bool>;
   { c != c2 } -> std::same_as<bool>;
 
-  { c.absQ() } -> std::same_as<float>;
-  { c.extractCharge(d) } -> std::same_as<float>;
+  { c.absQ() } -> std::same_as<double>;
+  { c.extractCharge(d) } -> std::same_as<double>;
   { c.extractMomentum(d) } -> std::same_as<double>;
   { c.qOverP(d, d) } -> std::same_as<double>;
 };

@@ -33,7 +33,7 @@ class GenericParticleHypothesis {
   /// @param absPdg the absolute PDG
   /// @param mass the particle mass
   /// @param chargeType the type of charge
-  constexpr GenericParticleHypothesis(PdgParticle absPdg, float mass,
+  constexpr GenericParticleHypothesis(PdgParticle absPdg, double mass,
                                       ChargeType chargeType)
       : m_absPdg{absPdg}, m_mass{mass}, m_chargeType{std::move(chargeType)} {
     assert(absPdg == makeAbsolutePdgParticle(absPdg) &&
@@ -67,10 +67,10 @@ class GenericParticleHypothesis {
   constexpr PdgParticle absolutePdg() const noexcept { return m_absPdg; }
 
   /// Get the hypothesized mass.
-  constexpr float mass() const noexcept { return m_mass; }
+  constexpr double mass() const noexcept { return m_mass; }
 
   /// Get the hypothesized absolute charge.
-  constexpr float absoluteCharge() const noexcept {
+  constexpr double absoluteCharge() const noexcept {
     return m_chargeType.absQ();
   }
 
@@ -125,7 +125,7 @@ class GenericParticleHypothesis {
 
  private:
   PdgParticle m_absPdg;
-  float m_mass;
+  double m_mass;
   ChargeType m_chargeType;
 
   friend bool operator==(const GenericParticleHypothesis<ChargeType>& lhs,
