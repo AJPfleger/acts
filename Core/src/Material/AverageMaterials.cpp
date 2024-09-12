@@ -42,8 +42,8 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
 
   // molar amount-of-substance assuming a unit area, i.e. volume = thickness*1*1
   // use double for (intermediate) computations to avoid precision loss
-  const double molarDensity1 = static_cast<double>(mat1.molarDensity());
-  const double molarDensity2 = static_cast<double>(mat2.molarDensity());
+  const double molarDensity1 = mat1.molarDensity();
+  const double molarDensity2 = mat2.molarDensity();
 
   const double molarAmount1 = molarDensity1 * thickness1;
   const double molarAmount2 = molarDensity2 * thickness2;
@@ -51,15 +51,15 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
 
   // handle vacuum specially
   if (!(0.0 < molarAmount)) {
-    return {Material(), static_cast<float>(thickness)};
+    return {Material(), thickness};
   }
 
   // radiation/interaction length follows from consistency argument
   const double thicknessInX0 = slab1.thicknessInX0() + slab2.thicknessInX0();
   const double thicknessInL0 = slab1.thicknessInL0() + slab2.thicknessInL0();
 
-  const float x0 = static_cast<float>(thickness / thicknessInX0);
-  const float l0 = static_cast<float>(thickness / thicknessInL0);
+  const double x0 = thickness / thicknessInX0;
+  const double l0 = thickness / thicknessInL0;
 
   // assume two slabs of materials with N1,N2 atoms/molecules each with atomic
   // masses A1,A2 and nuclear charges. We have a total of N = N1 + N2
@@ -83,7 +83,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
 
   const double molarWeight1 = molarAmount1 / molarAmount;
   const double molarWeight2 = molarAmount2 / molarAmount;
-  const float ar = static_cast<float>(molarWeight1 * ar1 + molarWeight2 * ar2);
+  const double ar = molarWeight1 * ar1 + molarWeight2 * ar2;
 
   // In the case of the atomic number, its main use is the computation
   // of the mean excitation energy approximated in ATL-SOFT-PUB-2008-003 as :
@@ -98,8 +98,8 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   // To respect this the average atomic number thus need to be defined as :
   //     ln(Z)*t = ln(Z1)*t1 + ln(Z2)*t2
   //           Z = Exp( ln(Z1)*t1/t + ln(Z2)*t2/t )
-  const double z1 = static_cast<double>(mat1.Z());
-  const double z2 = static_cast<double>(mat2.Z());
+  const double z1 = mat1.Z();
+  const double z2 = mat2.Z();
 
   const double thicknessWeight1 = thickness1 / thickness;
   const double thicknessWeight2 = thickness2 / thickness;
@@ -113,7 +113,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
 
   // compute average molar density by dividing the total amount-of-substance by
   // the total volume for the same unit area, i.e. volume = totalThickness*1*1
-  const float molarDensity = static_cast<float>(molarAmount / thickness);
+  const double molarDensity = molarAmount / thickness;
 
   return {Material::fromMolarDensity(x0, l0, ar, z, molarDensity), thickness};
 }

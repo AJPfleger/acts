@@ -39,15 +39,15 @@ namespace Acts {
 ///   the future.
 class Material {
  public:
-  using ParametersVector = Eigen::Matrix<float, 5, 1>;
+  using ParametersVector = Eigen::Matrix<double, 5, 1>;
 
-  // Both mass and molar density are stored as a float and can thus not be
+  // Both mass and molar density are stored as a double and can thus not be
   // distinguished by their types. Just changing the last element in the
-  // previously existing constructor that took five floats as input to represent
-  // molar density instead of mass density could have lead to significant
-  // confusion compared to the previous behaviour. To avoid any ambiguity,
-  // construction from separate material parameters must happen through the
-  // following named constructors.
+  // previously existing constructor that took five doubles as input to
+  // represent molar density instead of mass density could have lead to
+  // significant confusion compared to the previous behaviour. To avoid any
+  // ambiguity, construction from separate material parameters must happen
+  // through the following named constructors.
 
   /// Construct from material parameters using the molar density.
   ///
@@ -56,8 +56,8 @@ class Material {
   /// @param ar is the relative atomic mass
   /// @param z is the nuclear charge number
   /// @param molarRho is the molar density
-  static Material fromMolarDensity(float x0, float l0, float ar, float z,
-                                   float molarRho);
+  static Material fromMolarDensity(double x0, double l0, double ar, double z,
+                                   double molarRho);
   /// Construct from material parameters using the mass density.
   ///
   /// @param x0 is the radiation length
@@ -69,8 +69,8 @@ class Material {
   /// @warning Due to the choice of native mass units, using the mass density
   ///   can lead to numerical problems. Typical mass densities lead to
   ///   computations with values differing by 20+ orders of magnitude.
-  static Material fromMassDensity(float x0, float l0, float ar, float z,
-                                  float massRho);
+  static Material fromMassDensity(double x0, double l0, double ar, double z,
+                                  double massRho);
   /// Construct a vacuum representation.
   Material() = default;
   /// Construct from an encoded parameters vector.
@@ -83,34 +83,34 @@ class Material {
   Material& operator=(const Material& mat) = default;
 
   /// Check if the material is valid, i.e. it is not vacuum.
-  bool isValid() const { return 0.0f < m_ar; }
+  bool isValid() const { return 0. < m_ar; }
 
   /// Return the radiation length. Infinity in case of vacuum.
-  constexpr float X0() const { return m_x0; }
+  constexpr double X0() const { return m_x0; }
   /// Return the nuclear interaction length. Infinity in case of vacuum.
-  constexpr float L0() const { return m_l0; }
+  constexpr double L0() const { return m_l0; }
   /// Return the relative atomic mass.
-  constexpr float Ar() const { return m_ar; }
+  constexpr double Ar() const { return m_ar; }
   /// Return the nuclear charge number.
-  constexpr float Z() const { return m_z; }
+  constexpr double Z() const { return m_z; }
   /// Return the molar density.
-  constexpr float molarDensity() const { return m_molarRho; }
+  constexpr double molarDensity() const { return m_molarRho; }
   /// Return the molar electron density.
-  constexpr float molarElectronDensity() const { return m_z * m_molarRho; }
+  constexpr double molarElectronDensity() const { return m_z * m_molarRho; }
   /// Return the mass density.
-  float massDensity() const;
+  double massDensity() const;
   /// Return the mean electron excitation energy.
-  float meanExcitationEnergy() const;
+  double meanExcitationEnergy() const;
 
   /// Encode the properties into an opaque parameters vector.
   ParametersVector parameters() const;
 
  private:
-  float m_x0 = std::numeric_limits<float>::infinity();
-  float m_l0 = std::numeric_limits<float>::infinity();
-  float m_ar = 0.0f;
-  float m_z = 0.0f;
-  float m_molarRho = 0.0f;
+  double m_x0 = std::numeric_limits<double>::infinity();
+  double m_l0 = std::numeric_limits<double>::infinity();
+  double m_ar = 0.;
+  double m_z = 0.;
+  double m_molarRho = 0.;
 
   friend constexpr bool operator==(const Material& lhs, const Material& rhs) {
     return (lhs.m_x0 == rhs.m_x0) && (lhs.m_l0 == rhs.m_l0) &&

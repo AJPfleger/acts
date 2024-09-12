@@ -198,13 +198,12 @@ BOOST_AUTO_TEST_CASE(CombineSlabsEqualThicknessVacuum) {
     // atomic mass and nuclear charge are per atom, adding any amount vacuum
     // does not change the average atom properties only their density
     BOOST_CHECK_EQUAL(slab.material().Ar(), mat.Ar());
-    BOOST_CHECK_EQUAL(slab.material().Z(), 0.5f * mat.Z());
+    BOOST_CHECK_EQUAL(slab.material().Z(), 0.5 * mat.Z());
     // we have the same type of interactions just spread over twice the length
-    CHECK_CLOSE_REL(slab.material().X0(), 2.0f * mat.X0(), eps);
-    CHECK_CLOSE_REL(slab.material().L0(), 2.0f * mat.L0(), eps);
+    CHECK_CLOSE_REL(slab.material().X0(), 2. * mat.X0(), eps);
+    CHECK_CLOSE_REL(slab.material().L0(), 2. * mat.L0(), eps);
     // we have the same atoms just spread over more volume
-    BOOST_CHECK_EQUAL(slab.material().molarDensity(),
-                      0.5f * mat.molarDensity());
+    BOOST_CHECK_EQUAL(slab.material().molarDensity(), 0.5 * mat.molarDensity());
   }
   // reverse input order
   {
@@ -217,13 +216,12 @@ BOOST_AUTO_TEST_CASE(CombineSlabsEqualThicknessVacuum) {
     // atomic mass and nuclear charge are per atom, adding any amount vacuum
     // does not change the average atom properties only their density
     BOOST_CHECK_EQUAL(slab.material().Ar(), mat.Ar());
-    BOOST_CHECK_EQUAL(slab.material().Z(), 0.5f * mat.Z());
+    BOOST_CHECK_EQUAL(slab.material().Z(), 0.5 * mat.Z());
     // we have the same type of interactions just spread over twice the length
-    CHECK_CLOSE_REL(slab.material().X0(), 2.0f * mat.X0(), eps);
-    CHECK_CLOSE_REL(slab.material().L0(), 2.0f * mat.L0(), eps);
+    CHECK_CLOSE_REL(slab.material().X0(), 2. * mat.X0(), eps);
+    CHECK_CLOSE_REL(slab.material().L0(), 2. * mat.L0(), eps);
     // we have the same atoms just spread over more volume
-    BOOST_CHECK_EQUAL(slab.material().molarDensity(),
-                      0.5f * mat.molarDensity());
+    BOOST_CHECK_EQUAL(slab.material().molarDensity(), 0.5 * mat.molarDensity());
   }
 }
 
@@ -243,7 +241,7 @@ BOOST_AUTO_TEST_CASE(CombineSlabs) {
   BOOST_CHECK_EQUAL(slabMat0.thicknessInL0(), 0.5);
   BOOST_CHECK(slabMat1.isValid());
   BOOST_CHECK(slabMat1.material().isValid());
-  BOOST_CHECK_EQUAL(slabMat1.thickness(), 1.0);
+  BOOST_CHECK_EQUAL(slabMat1.thickness(), 1.);
   BOOST_CHECK_EQUAL(slabMat1.thicknessInX0(), 0.5);
   BOOST_CHECK_EQUAL(slabMat1.thicknessInL0(), 0.5);
   // check combined slabs
@@ -252,15 +250,15 @@ BOOST_AUTO_TEST_CASE(CombineSlabs) {
     BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.thickness(), 1.5);
-    BOOST_CHECK_EQUAL(slab.thicknessInX0(), 1.0);
-    BOOST_CHECK_EQUAL(slab.thicknessInL0(), 1.0);
-    BOOST_CHECK_EQUAL(slab.material().X0(), 1.5f);
-    BOOST_CHECK_EQUAL(slab.material().L0(), 1.5f);
-    BOOST_CHECK_EQUAL(slab.material().Ar(), 3.0f);
+    BOOST_CHECK_EQUAL(slab.thicknessInX0(), 1.);
+    BOOST_CHECK_EQUAL(slab.thicknessInL0(), 1.);
+    BOOST_CHECK_EQUAL(slab.material().X0(), 1.5);
+    BOOST_CHECK_EQUAL(slab.material().L0(), 1.5);
+    BOOST_CHECK_EQUAL(slab.material().Ar(), 3.);
     BOOST_CHECK_EQUAL(slab.material().Z(),
                       static_cast<float>(std::exp((0.5 / 1.5) * std::log(12.) +
                                                   (1. / 1.5) * std::log(6.))));
-    BOOST_CHECK_EQUAL(slab.material().molarDensity(), 4.0f);
+    BOOST_CHECK_EQUAL(slab.material().molarDensity(), 4.);
   }
   // reverse input order
   {
@@ -268,16 +266,16 @@ BOOST_AUTO_TEST_CASE(CombineSlabs) {
     BOOST_CHECK(slab.isValid());
     BOOST_CHECK(slab.material().isValid());
     BOOST_CHECK_EQUAL(slab.thickness(), 1.5);
-    BOOST_CHECK_EQUAL(slab.thicknessInX0(), 1.0);
-    BOOST_CHECK_EQUAL(slab.thicknessInL0(), 1.0);
-    BOOST_CHECK_EQUAL(slab.material().X0(), 1.5f);
-    BOOST_CHECK_EQUAL(slab.material().L0(), 1.5f);
-    BOOST_CHECK_EQUAL(slab.material().Ar(), 3.0f);
+    BOOST_CHECK_EQUAL(slab.thicknessInX0(), 1.);
+    BOOST_CHECK_EQUAL(slab.thicknessInL0(), 1.);
+    BOOST_CHECK_EQUAL(slab.material().X0(), 1.5);
+    BOOST_CHECK_EQUAL(slab.material().L0(), 1.5);
+    BOOST_CHECK_EQUAL(slab.material().Ar(), 3.);
     BOOST_CHECK_EQUAL(
         slab.material().Z(),
         static_cast<float>(
             std::exp((1. / 1.5) * std::log(6.) + (0.5 / 1.5) * std::log(12.))));
-    BOOST_CHECK_EQUAL(slab.material().molarDensity(), 4.0f);
+    BOOST_CHECK_EQUAL(slab.material().molarDensity(), 4.);
   }
 }
 

@@ -26,8 +26,8 @@ enum MaterialClassificationNumberIndices {
 constexpr double kAvogadro = 6.02214076e23 / Acts::UnitConstants::mol;
 }  // namespace
 
-Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
-                                               float z, float massRho) {
+Acts::Material Acts::Material::fromMassDensity(double x0, double l0, double ar,
+                                               double z, double massRho) {
   using namespace Acts::UnitLiterals;
 
   Material mat;
@@ -44,15 +44,13 @@ Acts::Material Acts::Material::fromMassDensity(float x0, float l0, float ar,
   // with the atomic mass given by
   //
   //      atomic-mass = relative-atomic-mass * atomic-mass-unit
-  //
-  // perform computations in double precision to avoid loss of precision
-  const double atomicMass = static_cast<double>(ar) * 1_u;
-  mat.m_molarRho = static_cast<double>(massRho) / (atomicMass * kAvogadro);
+  const double atomicMass = ar * 1_u;
+  mat.m_molarRho = massRho / (atomicMass * kAvogadro);
   return mat;
 }
 
-Acts::Material Acts::Material::fromMolarDensity(float x0, float l0, float ar,
-                                                float z, float molarRho) {
+Acts::Material Acts::Material::fromMolarDensity(double x0, double l0, double ar,
+                                                double z, double molarRho) {
   Material mat;
   mat.m_x0 = x0;
   mat.m_l0 = l0;
@@ -69,20 +67,20 @@ Acts::Material::Material(const ParametersVector& parameters)
       m_z(parameters[eNuclearCharge]),
       m_molarRho(parameters[eMolarDensity]) {}
 
-float Acts::Material::massDensity() const {
+double Acts::Material::massDensity() const {
   using namespace Acts::UnitLiterals;
 
   // perform computations in double precision to avoid loss of precision
-  const double atomicMass = static_cast<double>(m_ar) * 1_u;
-  const double numberDensity = static_cast<double>(m_molarRho) * kAvogadro;
+  const double atomicMass = m_ar * 1_u;
+  const double numberDensity = m_molarRho * kAvogadro;
   return atomicMass * numberDensity;
 }
 
-float Acts::Material::meanExcitationEnergy() const {
+double Acts::Material::meanExcitationEnergy() const {
   using namespace Acts::UnitLiterals;
 
   // use approximative computation as defined in ATL-SOFT-PUB-2008-003
-  return 16_eV * std::pow(m_z, 0.9f);
+  return 16_eV * std::pow(m_z, 0.9);
 }
 
 Acts::Material::ParametersVector Acts::Material::parameters() const {
