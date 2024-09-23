@@ -1300,7 +1300,7 @@ class Gx2Fitter {
       // We skip the check during the first iteration, since we cannot guarantee
       // to hit all/enough measurement surfaces with the initial parameter
       // guess.
-      if ((nUpdate > 0) && (ndfSystem + 1 > countNdf)) {
+      if ((nUpdate > 1) && (ndfSystem + 1 > countNdf)) {
         ACTS_INFO("Not enough measurements. Require "
                   << ndfSystem + 1 << ", but only " << countNdf
                   << " could be used.");
