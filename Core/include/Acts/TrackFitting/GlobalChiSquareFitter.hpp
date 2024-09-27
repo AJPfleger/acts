@@ -1302,7 +1302,10 @@ class Gx2Fitter {
 
       // experimental
       const double dampingFactor =
-          (std::numbers::pi / 2. - std::atan(nUpdate - 5.)) / std::numbers::pi;
+          multipleScattering
+              ? (std::numbers::pi / 2. - std::atan(nUpdate - 5.)) /
+                    std::numbers::pi
+              : 1;
 
       // calculate delta params [a] * delta = b
       Eigen::VectorXd deltaParamsExtended =
