@@ -41,10 +41,12 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TrackHelpers.hpp"
 
+#include <cmath>  // For std::atan
 #include <functional>
 #include <limits>
 #include <map>
 #include <memory>
+#include <numbers>  // For std::numbers::pi
 #include <unordered_map>
 
 namespace Acts::Experimental {
@@ -1298,9 +1300,14 @@ class Gx2Fitter {
       aMatrix = aMatrixExtended.topLeftCorner<eBoundSize, eBoundSize>().eval();
       bVector = bVectorExtended.topLeftCorner<eBoundSize, 1>().eval();
 
+      // experimental
+      const double dampingFactor =
+          (std::numbers::pi / 2. - std::atan(nUpdate - 5.)) / std::numbers::pi;
+
       // calculate delta params [a] * delta = b
       Eigen::VectorXd deltaParamsExtended =
-          aMatrixExtended.colPivHouseholderQr().solve(bVectorExtended);
+          aMatrixExtended.colPivHouseholderQr().solve(bVectorExtended) *
+          dampingFactor;
 
       deltaParams = deltaParamsExtended.topLeftCorner<eBoundSize, 1>().eval();
 
@@ -1313,7 +1320,8 @@ class Gx2Fitter {
                    << "deltaParamsExtended:\n"
                    << deltaParamsExtended << "\n"
                    << "oldChi2sum = " << oldChi2sum << "\n"
-                   << "chi2sum = " << chi2sum);
+                   << "chi2sum = " << chi2sum << "\n"
+                   << "dampingFactor = " << dampingFactor);
 
       if ((gx2fOptions.relChi2changeCutOff != 0) && (nUpdate > 0) &&
           (std::abs(chi2sum / oldChi2sum - 1) <
