@@ -642,7 +642,7 @@ ProcessCode RootTrackStatesWriter::writeT(const AlgorithmContext& ctx,
                          : nan;
         }
         m_pull_eLOC0[ipar].push_back(
-            static_cast<float>(pulls[Acts::eBoundLoc0]/0.));
+            static_cast<float>(pulls[Acts::eBoundLoc0]));
         m_pull_eLOC1[ipar].push_back(
             static_cast<float>(pulls[Acts::eBoundLoc1]));
         m_pull_ePHI[ipar].push_back(static_cast<float>(pulls[Acts::eBoundPhi]));
