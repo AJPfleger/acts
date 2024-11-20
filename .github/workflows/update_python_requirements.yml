@@ -4,29 +4,16 @@ on:
   push:
 
 jobs:
-  check_pr_labels:
+  update:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/labeler@v5
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          sync-labels: true
-          dot: true
+      - uses: actions/checkout@v3
 
-#jobs:
-#  update:
-#    runs-on: ubuntu-latest
-#    steps:
-#      - name: Checkout repository
-#        uses: actions/checkout@v3
-#
-#      - name: Set up Python
-#        uses: actions/setup-python@v4
-#        with:
-#          python-version: 3.12
-#
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
 #      - name: Install pip-tools
 #        run: pip install pip-tools
 #
