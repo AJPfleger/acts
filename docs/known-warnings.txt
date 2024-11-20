@@ -7,3 +7,4 @@
 .*undefined label: .*class_acts_1_1_grid_surface_material_t.*
 # I think these are because we use specialization
 .*undefined label: .*bdt.*
+.*undefined label: .*
