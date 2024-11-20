@@ -6,6 +6,10 @@ on:
 jobs:
   update-python-requirements:
     runs-on: ubuntu-latest
+    env:
+      # This branch will receive updates each time the workflow runs
+      # It doesn't matter if it's deleted when merged, it'll be re-created
+      BRANCH_NAME: auto-dependency-upgrades
     steps:
       - uses: actions/checkout@v3
 
