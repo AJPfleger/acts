@@ -21,9 +21,19 @@ jobs:
       - name: Install pip-tools
         run: pip install pip-tools
 
-      - name: Compile requirements.txt
-#        run: pip-compile --output-file=docs/requirements.txt docs/requirements.in
-        run: pip-compile docs/requirements.in > docs/requirements.txt
+#      - name: Compile requirements.txt
+##        run: pip-compile --output-file=docs/requirements.txt docs/requirements.in
+#        run: pip-compile docs/requirements.in > docs/requirements.txt
+
+      - name: Compile all requirements.txt
+        run: |
+          folder=(
+            docs
+            CI/clang_tidy
+          )
+          for folder in "${filer_list[@]}"; do
+            pip-compile "${folder}/requirements.in" > "${folder}/requirements.txt"
+          done
 
       - name: Detect changes
         id: changes
@@ -53,7 +63,7 @@ jobs:
           if [ -z $PR ]; then
             gh pr create \
             --head $BRANCH_NAME \
-            --title "Automated dependency upgrades" \
+            --title "chore: automated python requirements upgrades" \
             --body "Full log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           else
             echo "Pull request already exists, won't create a new one."
