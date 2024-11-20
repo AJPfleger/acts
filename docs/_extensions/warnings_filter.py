@@ -52,6 +52,7 @@ class WarningsFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord) -> bool:
         print(record)
+        print(formatter.format(record))
         print(record.msg)
         print(str(record.msg))
         for expression in self._expressions:
