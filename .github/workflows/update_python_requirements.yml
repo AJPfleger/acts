@@ -1,9 +1,7 @@
 name: Update Requirements
 
 on:
-  schedule:
-    - cron: '0 0 * * 0' # Runs weekly on Sunday at midnight UTC
-  workflow_dispatch: # Allow manual trigger if needed
+  push:
 
 jobs:
   update:
