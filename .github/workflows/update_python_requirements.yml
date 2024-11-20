@@ -27,12 +27,12 @@ jobs:
 
       - name: Compile all requirements.txt
         run: |
-          folder=(
+          folder_list=(
             docs
             CI/clang_tidy
             Examples/Scripts
           )
-          for folder in "${filer_list[@]}"; do
+          for folder in "${folder_list[@]}"; do
             pip-compile "${folder}/requirements.in" > "${folder}/requirements.txt"
           done
 
