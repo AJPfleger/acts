@@ -4,3 +4,11 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+
+updates:
+  - package-ecosystem: "pip"
+    directory: "/CI/clang_tidy"
+    schedule:
+#      interval: "monthly"
+        # hourly at minute 23
+        - cron: "40 * * * *"
