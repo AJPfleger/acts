@@ -51,6 +51,7 @@ class WarningsFilter(logging.Filter):
         self._silent = silent
 
     def filter(self, record: logging.LogRecord) -> bool:
+        print("***** WARNINGS-FILTER filter*****")
         for expression in self._expressions:
             try:
                 if re.match(expression, str(record.msg)):
@@ -68,6 +69,7 @@ class WarningsFilter(logging.Filter):
 
 
 def configure(app: Sphinx) -> None:
+    print("***** WARNINGS-FILTER configure *****")
     """Entry point.
 
     Args:
@@ -89,6 +91,7 @@ def configure(app: Sphinx) -> None:
 
 
 def setup(app: Sphinx) -> Dict[str, Any]:
+    print("***** WARNINGS-FILTER setup *****")
     app.add_config_value("warnings_filter_config", "", "")
     app.add_config_value("warnings_filter_silent", True, "")
 
