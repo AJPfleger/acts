@@ -21,12 +21,20 @@ jobs:
 #        run: pip-compile --output-file=docs/requirements.txt docs/requirements.in
         run: pip-compile docs/requirements.in > docs/requirements.txt
 
-#      - name: Commit updated requirements.txt
-#        run: |
-#          git config user.name "github-actions[bot]"
-#          git config user.email "github-actions[bot]@users.noreply.github.com"
-#          git add requirements.txt
-#          git commit -m "Weekly Update: Regenerate requirements.txt"
-#          git push
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Detect changes
+        id: changes
+        run:
+          # This output boolean tells us if the dependencies have actually changed
+          echo "count=$(git status --porcelain=v1 2>/dev/null | wc -l)" >> $GITHUB_OUTPUT
+
+      - name: Commit updated requirements.txt
+        # Only push if changes exist
+        if: steps.changes.outputs.count > 0
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "Weekly Update: Regenerate requirements.txt"
+          git push -f origin ${{ github.ref_name }}:$BRANCH_NAME
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
