@@ -52,7 +52,6 @@ class WarningsFilter(logging.Filter):
 
     def filter(self, record: logging.LogRecord) -> bool:
         for expression in self._expressions:
-            print("***** WARNINGS-FILTER expression*****")
             try:
                 if re.match(expression, str(record.msg)):
                     print("***** WARNINGS-FILTER match*****")
@@ -66,6 +65,7 @@ class WarningsFilter(logging.Filter):
                         return True
                 elif re.match(".*undefined label: .*", str(record.msg)):
                     print("***** WARNINGS-FILTER difference *****")
+                    print(str(record.msg))
             except:
                 print("ERROR??", expression, record.msg, type(record.msg))
                 raise
