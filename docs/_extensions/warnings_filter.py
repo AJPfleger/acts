@@ -64,6 +64,8 @@ class WarningsFilter(logging.Filter):
                         record.levelno = logging.INFO
                         record.msg = f"Filtered warning: {record.msg}"
                         return True
+                elif re.match(".*undefined label: .*", str(record.msg)):
+                    print("***** WARNINGS-FILTER difference *****")
             except:
                 print("ERROR??", expression, record.msg, type(record.msg))
                 raise
