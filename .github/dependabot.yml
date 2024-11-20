@@ -11,4 +11,4 @@ updates:
     schedule:
 #      interval: "monthly"
         # hourly at minute 23
-        - cron: "40 * * * *"
+        - cron: "51 * * * *"
