@@ -51,13 +51,16 @@ class WarningsFilter(logging.Filter):
         self._silent = silent
 
     def filter(self, record: logging.LogRecord) -> bool:
-        print("***** WARNINGS-FILTER filter*****")
         for expression in self._expressions:
+            print("***** WARNINGS-FILTER expression*****")
             try:
                 if re.match(expression, str(record.msg)):
+                    print("***** WARNINGS-FILTER match*****")
                     if self._silent:
+                        print("***** WARNINGS-FILTER match-silent*****")
                         return False
                     else:
+                        print("***** WARNINGS-FILTER match-loud*****")
                         record.levelno = logging.INFO
                         record.msg = f"Filtered warning: {record.msg}"
                         return True
