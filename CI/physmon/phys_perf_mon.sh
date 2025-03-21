@@ -461,7 +461,7 @@ fi
 if [[ "$mode" == "all" || "$mode" == "gx2f_refit" ]]; then
     run_histcmp \
         $outdir/data/trackrefitting_gx2f/performance_trackrefitting.root \
-        $refdir/trackrefitting_gx2f/performance_trackrefitting.root \
+        $refdir/trackrefitting_kf/performance_trackrefitting.root \
         "Truth tracking (GX2F refit)" \
         trackrefitting_gx2f/performance_trackrefitting.html \
         trackrefitting_gx2f/performance_trackrefitting_plots \
