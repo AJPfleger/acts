@@ -28,13 +28,13 @@ def runRefittingGx2f(
         s=s,
     )
 
-    kalmanOptions = {
+    gx2fOptions = {
         "multipleScattering": multipleScattering,
         "energyLoss": energyLoss,
-        "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
-        "level": acts.logging.INFO,
-        "chi2Cut": float("inf"),
+        "nUpdateMax": 1,
+        "relChi2changeCutOff": 1e-7,
+        "level": acts.logging.INFO
     }
 
     s.addAlgorithm(
@@ -43,7 +43,7 @@ def runRefittingGx2f(
             inputTracks="kf_tracks",
             outputTracks="gx2f_refit_tracks",
             fit=acts.examples.makeGlobalChiSquareFitterFunction(
-                trackingGeometry, field, **kalmanOptions
+                trackingGeometry, field, **gx2fOptions
             ),
         )
     )
