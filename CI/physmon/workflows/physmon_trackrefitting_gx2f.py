@@ -5,7 +5,7 @@ from pathlib import Path
 import shutil
 
 import acts
-from truth_tracking_kalman_refitting import runRefittingKf
+from truth_tracking_gx2f_refitting import runRefittingGx2f
 
 from physmon_common import makeSetup
 
@@ -19,7 +19,7 @@ with tempfile.TemporaryDirectory() as temp:
     )
 
     tp = Path(temp)
-    runRefittingKf(
+    runRefittingGx2f(
         trackingGeometry=setup.trackingGeometry,
         field=setup.field,
         digiConfigFile=setup.digiConfig,

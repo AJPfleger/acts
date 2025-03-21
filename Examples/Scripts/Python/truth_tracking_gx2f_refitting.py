@@ -10,7 +10,7 @@ from truth_tracking_kalman import runTruthTrackingKalman
 u = acts.UnitConstants
 
 
-def runRefittingKf(
+def runRefittingGx2f(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     digiConfigFile: Path,
@@ -41,8 +41,8 @@ def runRefittingKf(
         acts.examples.RefittingAlgorithm(
             level=acts.logging.INFO,
             inputTracks="kf_tracks",
-            outputTracks="kf_refit_tracks",
-            fit=acts.examples.makeKalmanFitterFunction(
+            outputTracks="gx2f_refit_tracks",
+            fit=acts.examples.makeGlobalChiSquareFitterFunction(
                 trackingGeometry, field, **kalmanOptions
             ),
         )
@@ -51,7 +51,7 @@ def runRefittingKf(
     s.addAlgorithm(
         acts.examples.TrackTruthMatcher(
             level=acts.logging.INFO,
-            inputTracks="kf_refit_tracks",
+            inputTracks="gx2f_refit_tracks",
             inputParticles="particles_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             outputTrackParticleMatching="refit_track_particle_matching",
@@ -62,7 +62,7 @@ def runRefittingKf(
     s.addWriter(
         acts.examples.RootTrackStatesWriter(
             level=acts.logging.INFO,
-            inputTracks="kf_refit_tracks",
+            inputTracks="gx2f_refit_tracks",
             inputParticles="particles_selected",
             inputTrackParticleMatching="refit_track_particle_matching",
             inputSimHits="simhits",
@@ -74,7 +74,7 @@ def runRefittingKf(
     s.addWriter(
         acts.examples.RootTrackSummaryWriter(
             level=acts.logging.INFO,
-            inputTracks="kf_refit_tracks",
+            inputTracks="gx2f_refit_tracks",
             inputParticles="particles_selected",
             inputTrackParticleMatching="refit_track_particle_matching",
             filePath=str(outputDir / "tracksummary_kf_refit.root"),
@@ -84,7 +84,7 @@ def runRefittingKf(
     s.addWriter(
         acts.examples.TrackFitterPerformanceWriter(
             level=acts.logging.INFO,
-            inputTracks="kf_refit_tracks",
+            inputTracks="gx2f_refit_tracks",
             inputParticles="particles_selected",
             inputTrackParticleMatching="refit_track_particle_matching",
             filePath=str(outputDir / "performance_kf_refit.root"),
@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runRefittingKf(
+    runRefittingGx2f(
         trackingGeometry=trackingGeometry,
         field=field,
         digiConfigFile=digiConfigFile,
