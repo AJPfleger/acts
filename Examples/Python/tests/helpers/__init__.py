@@ -104,12 +104,12 @@ except ModuleNotFoundError:
 except ImportError:
     podioEnabled = False
 
-isCI = os.environ.get("CI") is not None
-
-if isCI:
-    for k, v in dict(locals()).items():
-        if k.endswith("Enabled"):
-            locals()[k] = True
+# isCI = os.environ.get("CI") is not None
+#
+# if isCI:
+#     for k, v in dict(locals()).items():
+#         if k.endswith("Enabled"):
+#             locals()[k] = True
 
 
 class AssertCollectionExistsAlg(IAlgorithm):
