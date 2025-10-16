@@ -1,3 +1,3 @@
-set(unittest_extra_libraries ActsExamplesIoRoot)
+set(unittest_extra_libraries ActsExamplesIoRoot ActsExamplesIoCsv)
 
 add_unittest(RootSimhitReaderWriter SimhitReaderWriterTests.cpp)

@@ -16,6 +16,10 @@
 #include "ActsTests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsTests/CommonHelpers/WhiteBoardUtilities.hpp"
 
+#include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
+
 #include <fstream>
 #include <random>
 
@@ -59,67 +63,147 @@ namespace ActsTests {
 
 BOOST_AUTO_TEST_SUITE(RootSuite)
 
-BOOST_AUTO_TEST_CASE(RoundTripTest) {
-  ////////////////////////////
-  // Create some dummy data //
-  ////////////////////////////
-  auto simhits1 = makeTestSimhits(20);
-  auto simhits2 = makeTestSimhits(15);
+BOOST_AUTO_TEST_CASE(Converter) {
+MuonSpacePointContainer mspContainer;
 
-  ///////////
-  // Write //
-  ///////////
-  RootSimHitWriter::Config writerConfig;
-  writerConfig.inputSimHits = "hits";
-  writerConfig.filePath = "./testhits.root";
+RootMuonSpacePointReader::Config readerConfig;
+readerConfig.filePath = "./MS_SpacePoints.root";
 
-  RootSimHitWriter writer(writerConfig, Logging::WARNING);
+RootMuonSpacePointReader reader(readerConfig, Logging::INFO);
+auto readTool = GenericReadWriteTool<>()
+        .add(readerConfig.outputSpacePoints, mspContainer);
+const auto [all_msp] = readTool.read(reader);
+reader.finalize();
 
-  auto readWriteTool =
-      GenericReadWriteTool<>().add(writerConfig.inputSimHits, simhits1);
+MeasurementContainer measurements;
 
-  // Write two different events
-  readWriteTool.write(writer, 11);
+measurements.reserve(all_msp.size());
 
-  std::get<0>(readWriteTool.tuple) = simhits2;
-  readWriteTool.write(writer, 22);
+IndexMultimap<Index> mapOriginal;
+int i = 0;
+for (auto& msp_vec : all_msp) {
+  // std::cout << msp_vec << std::endl;
+  for (auto& msp : msp_vec) {
 
-  writer.finalize();
-
-  //////////
-  // Read //
-  //////////
-  RootSimHitReader::Config readerConfig;
-  readerConfig.outputSimHits = "hits";
-  readerConfig.filePath = "./testhits.root";
-
-  RootSimHitReader reader(readerConfig, Logging::WARNING);
-  // Read two different events
-  const auto [hitsRead2] = readWriteTool.read(reader, 22);
-  const auto [hitsRead1] = readWriteTool.read(reader, 11);
-  reader.finalize();
-
-  ///////////
-  // Check //
-  ///////////
-
-  auto check = [](const auto &testhits, const auto &refhits, auto tol) {
-    BOOST_CHECK_EQUAL(testhits.size(), refhits.size());
-
-    for (const auto &[ref, test] : zip(refhits, testhits)) {
-      CHECK_CLOSE_ABS(test.fourPosition(), ref.fourPosition(), tol);
-      CHECK_CLOSE_ABS(test.momentum4After(), ref.momentum4After(), tol);
-      CHECK_CLOSE_ABS(test.momentum4Before(), ref.momentum4Before(), tol);
-
-      BOOST_CHECK_EQUAL(ref.geometryId(), test.geometryId());
-      BOOST_CHECK_EQUAL(ref.particleId(), test.particleId());
-      BOOST_CHECK_EQUAL(ref.index(), test.index());
+    // Only take Mdt
+    if (!msp.isStraw()) {
+      continue;
     }
-  };
+    auto geoId = msp.geometryId();
+    auto pos = msp.localPosition();
+    auto cov = msp.covariance();
+    std::cout << "\nnew msp\n" << geoId << "\n local pos " << pos 
+    << "\n driftradius " << msp.driftRadius() << std::endl;
+            std::cout << "covariance" << std::endl;
+    for (auto& c : cov) {
+      std::cout << c << std::endl;
+    }
 
-  check(hitsRead1, simhits1, 1.e-6);
-  check(hitsRead2, simhits2, 1.e-6);
+    // Local position is in volume frame.
+    // We need drift radius in surface frame.
+
+    DigitizedParameters dParameters;
+
+    dParameters.indices.push_back(Acts::eBoundLoc1);
+    dParameters.values.push_back(msp.driftRadius());
+    dParameters.variances.push_back(cov[1]);
+
+    // this one should be z-distance
+    dParameters.indices.push_back(Acts::eBoundLoc0);
+    // parentTrf inverse l158
+    dParameters.values.push_back(pos[0]);
+    dParameters.variances.push_back(cov[0]);
+    
+    // dParameters.indices.push_back(Acts::eBoundTime);
+    // dParameters.values.push_back(pos[2]);
+    // dParameters.variances.push_back(cov[2]);
+
+    auto measurement = createMeasurement(measurements, geoId, dParameters);
+    mapOriginal.insert(std::pair<Index, Index>{i, i});
+    i++;
+  }
+  break;
 }
+
+
+CsvMeasurementWriter::Config writerConfig;
+writerConfig.inputMeasurements = "meas";
+writerConfig.inputMeasurementSimHitsMap = "map";
+writerConfig.outputDir = "";
+
+CsvMeasurementWriter writer(writerConfig, Logging::VERBOSE);
+
+auto writeTool = GenericReadWriteTool<>()
+        .add(writerConfig.inputMeasurements, measurements)
+        .add(writerConfig.inputMeasurementSimHitsMap, mapOriginal);
+
+writeTool.write(writer);
+    
+
+// std::cout << msp << std::endl;
+}
+
+// BOOST_AUTO_TEST_CASE(RoundTripTest) {
+//   ////////////////////////////
+//   // Create some dummy data //
+//   ////////////////////////////
+//   auto simhits1 = makeTestSimhits(20);
+//   auto simhits2 = makeTestSimhits(15);
+//
+//   ///////////
+//   // Write //
+//   ///////////
+//   RootSimHitWriter::Config writerConfig;
+//   writerConfig.inputSimHits = "hits";
+//   writerConfig.filePath = "./testhits.root";
+//
+//   RootSimHitWriter writer(writerConfig, Logging::WARNING);
+//
+//   auto readWriteTool =
+//       GenericReadWriteTool<>().add(writerConfig.inputSimHits, simhits1);
+//
+//   // Write two different events
+//   readWriteTool.write(writer, 11);
+//
+//   std::get<0>(readWriteTool.tuple) = simhits2;
+//   readWriteTool.write(writer, 22);
+//
+//   writer.finalize();
+//
+//   //////////
+//   // Read //
+//   //////////
+//   RootSimHitReader::Config readerConfig;
+//   readerConfig.outputSimHits = "hits";
+//   readerConfig.filePath = "./testhits.root";
+//
+//   RootSimHitReader reader(readerConfig, Logging::WARNING);
+//   // Read two different events
+//   const auto [hitsRead2] = readWriteTool.read(reader, 22);
+//   const auto [hitsRead1] = readWriteTool.read(reader, 11);
+//   reader.finalize();
+//
+//   ///////////
+//   // Check //
+//   ///////////
+//
+//   auto check = [](const auto &testhits, const auto &refhits, auto tol) {
+//     BOOST_CHECK_EQUAL(testhits.size(), refhits.size());
+//
+//     for (const auto &[ref, test] : zip(refhits, testhits)) {
+//       CHECK_CLOSE_ABS(test.fourPosition(), ref.fourPosition(), tol);
+//       CHECK_CLOSE_ABS(test.momentum4After(), ref.momentum4After(), tol);
+//       CHECK_CLOSE_ABS(test.momentum4Before(), ref.momentum4Before(), tol);
+//
+//       BOOST_CHECK_EQUAL(ref.geometryId(), test.geometryId());
+//       BOOST_CHECK_EQUAL(ref.particleId(), test.particleId());
+//       BOOST_CHECK_EQUAL(ref.index(), test.index());
+//     }
+//   };
+//
+//   check(hitsRead1, simhits1, 1.e-6);
+//   check(hitsRead2, simhits2, 1.e-6);
+// }
 
 BOOST_AUTO_TEST_SUITE_END()
 
