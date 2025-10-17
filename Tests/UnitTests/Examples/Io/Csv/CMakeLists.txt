@@ -1,3 +1,3 @@
-set(unittest_extra_libraries ActsExamplesDigitization ActsExamplesIoCsv)
+set(unittest_extra_libraries ActsExamplesDigitization ActsExamplesIoCsv ActsExamplesIoRoot)
 
 add_unittest(MeasurementReaderWriter MeasurementReaderWriterTests.cpp)

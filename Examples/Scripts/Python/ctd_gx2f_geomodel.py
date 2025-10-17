@@ -151,6 +151,7 @@ def main():
             # inputSimHits=simAlg.config.outputSimHits,
             outputParticleMeasurementsMap="particle_measurements_map",
             inputDir=str(""),
+            geometry4track=trackingGeometry,
         )
     )
 

@@ -20,6 +20,9 @@
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Io/Root/RootMuonSpacePointReader.hpp"
+
 #include <cstddef>
 #include <memory>
 #include <string>
@@ -69,6 +72,12 @@ class CsvMeasurementReader final : public IReader {
 
     /// Output collection to map particles to measurements.
     std::string outputParticleMeasurementsMap = "particle_measurements_map";
+
+    /// Output estimated track parameters collection.
+    std::string outputTrackParameters = "estimatedparameters";
+   
+    /// Geometry
+    Acts::TrackingGeometry geometry4track;
   };
 
   /// Construct the cluster reader.
@@ -110,6 +119,11 @@ class CsvMeasurementReader final : public IReader {
 
   WriteDataHandle<InverseMultimap<SimBarcode>> m_outputParticleMeasurementsMap{
       this, "OutputParticleMeasurementsMap"};
+
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
+
+  Acts::TrackingGeometry m_geometry4track{};
 };
 
 }  // namespace ActsExamples

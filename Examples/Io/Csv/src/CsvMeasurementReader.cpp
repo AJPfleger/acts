@@ -21,6 +21,11 @@
 #include "ActsExamples/Io/Csv/CsvInputOutput.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
+// #include "ActsTests/CommonHelpers/WhiteBoardUtilities.hpp"
+
+
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -50,6 +55,8 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
       m_cfg.outputMeasurementParticlesMap);
   m_inputHits.maybeInitialize(m_cfg.inputSimHits);
   m_outputParticleMeasurementsMap.maybeInitialize(m_cfg.outputParticleMeasurementsMap);
+  m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
+  m_geometry4track{m_cfg.geometry4track};
 
   // Check if event ranges match (should also catch missing files)
   auto checkRange = [&](const std::string& fileStem) {
@@ -210,8 +217,69 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
                                        mshLink.measurement_id, mshLink.hit_id);
   }
 
+  // // The global positions of the bottom, middle and space points
+  // std::array<Vector3, 3> spPositions012 = {Vector3::Zero(), Vector3::Zero(),
+  //                                       Vector3::Zero()};
+  //
+  // Read spacepoints for first 3 spacepoints and geoId
+  Acts::GeometryIdentifier geoId_sp1{8286623383081215745};
+  double lpx = 397.86181;//pos[0]
+  double lpy = 1.9517360;//driftRadius
+  // {
+  //   MuonSpacePointContainer mspContainer;
+  //
+  //   RootMuonSpacePointReader::Config readerConfig;
+  //   readerConfig.filePath = "./MS_SpacePoints.root";
+  //
+  //   RootMuonSpacePointReader reader(readerConfig, Acts::Logging::INFO);
+  //   auto readTool = GenericReadWriteTool<>()
+  //           .add(readerConfig.outputSpacePoints, mspContainer);
+  //   const auto [all_msp] = readTool.read(reader);
+  //   reader.finalize();
+  //
+  //
+  //   // IndexMultimap<Index> mapOriginal;
+  //   int i = 0;
+  //   for (auto& msp_vec : all_msp) {
+  //     // std::cout << msp_vec << std::endl;
+  //     for (auto& msp : msp_vec) {
+  //       // Only take Mdt
+  //       if (!msp.isStraw()) {
+  //         continue;
+  //       }
+  //
+  //       if (i == 0) {
+  //         geoId_sp1 = msp.geometryId();
+  //         auto pos = msp.localPosition();
+  //         lpx = pos[0];
+  //         lpy = msp.driftRadius();
+  //
+  //       }
+  //
+  //
+  //       break;
+  //
+  //       // // TODO fill with global information
+  //       // Vector3 new_sp{};
+  //       // sp012.p
+  //       // spPositions012[i][0] = msp.
+  //       //
+  //       // // We only need 3 spacepoints
+  //       // i++;
+  //       // if (i == 2) {break;}
+  //     }
+  //     break;
+  //   }
+  // }
+
+
+  
+  
+
+
   for (const MeasurementData& m : measurementData) {
     Acts::GeometryIdentifier geoId{m.geometry_id};
+
 
     // Create the measurement
     DigitizedParameters dParameters;
@@ -333,5 +401,60 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   measurementParticlesMap.reserve(5);
     m_outputParticleMeasurementsMap(
         ctx, invertIndexMultimap(measurementParticlesMap));
+
+  // estimated trackparameters
+  {
+    TrackParametersContainer trackParameters;
+    trackParameters.reserve(5);
+
+
+    const Acts::Surface* surface = m_geometry4track.findSurface(geoId_sp1);
+
+
+//  Row   * Instance * global_po * global_po * global_po *
+// ***********************************************************
+// *        0 *        0 * -2633.904 * -5421.951 * -2675.824 *
+// *        0 *        1 * -2644.672 * -5444.602 * -2686.824 *
+// *        0 *        2 * -2656.306 * -5466.752 * -2697.824 *
+  // The global positions of the bottom, middle and space points
+  std::array<Acts::Vector3, 3> spPositions012 = {Acts::Vector3::Zero(), Acts::Vector3::Zero(),
+                                        Acts::Vector3::Zero()};
+  spPositions012[0] = Acts::Vector3(-2633.904, -5421.951, -2675.824);
+  spPositions012[1] = Acts::Vector3(-2644.672, -5444.602, -2686.824);
+  spPositions012[2] = Acts::Vector3(-2656.306, -5466.752, -2697.824);
+  Acts::Vector3 bField = Acts::Vector3::Zero();
+
+        Acts::FreeVector freeParams = Acts::estimateTrackParamsFromSeed(
+        spPositions012[0], spPositions012[1], spPositions012[2], bField);
+    freeParams[Acts::eFreeTime] = 0;
+
+  Acts::Vector3 origin = spPositions012[0];
+  Acts::Vector3 direction = freeParams.segment<3>(Acts::eFreeDir0);
+
+  Acts::BoundVector params = Acts::BoundVector::Zero();
+  params[Acts::eBoundPhi] = Acts::VectorHelpers::phi(direction);
+  params[Acts::eBoundTheta] = Acts::VectorHelpers::theta(direction);
+  params[Acts::eBoundQOverP] = freeParams[Acts::eFreeQOverP];
+
+  // Transform the bottom space point to local coordinates of the provided
+  // surface
+  // auto lpResult = surface.globalToLocal(gctx, origin, direction);
+  // if (!lpResult.ok()) {
+  //   return Result<BoundVector>::failure(lpResult.error());
+  // }
+  // Vector2 bottomLocalPos = lpResult.value();
+  // The estimated loc0 and loc1
+  params[Acts::eBoundLoc0] = lpx;//bottomLocalPos.x();
+  params[Acts::eBoundLoc1] = lpy;//bottomLocalPos.y();
+  params[Acts::eBoundTime] = 0.;
+  
+    Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Identity();
+    Acts::ParticleHypothesis particleHypothesis = Acts::ParticleHypothesis::muon();
+
+    trackParameters.emplace_back(surface->getSharedPtr(), params, cov, particleHypothesis);
+
+    m_outputTrackParameters(ctx, std::move(trackParameters));
+  }
+
   return ActsExamples::ProcessCode::SUCCESS;
 }
