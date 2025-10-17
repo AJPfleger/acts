@@ -15,6 +15,11 @@ from acts.examples import (
     ObjTrackingGeometryWriter,
     CsvMeasurementReader,
 )
+
+from acts.examples.reconstruction import (
+    addGx2fTracks,
+)
+
 from acts import geomodel as gm
 from acts import examples
 
@@ -123,7 +128,7 @@ def main():
     )
 
     # Load external particles. We only need them for the initial guess.
-    inputParticlePath = Path("./particles")
+    inputParticlePath = Path("./particles_simulation.root")
     acts.logging.getLogger("CTD").info(
         "Reading particles from %s", inputParticlePath.resolve()
     )
@@ -138,16 +143,91 @@ def main():
 
     # Read measurements from file
     s.addReader(
-        conf_const(
-            CsvMeasurementReader,
+        CsvMeasurementReader(
             level=acts.logging.INFO,
             outputMeasurements="measurements",
-            outputMeasurementSimHitsMap="simhitsmap",
+            outputMeasurementSimHitsMap="measurement_simhits_map",
             outputMeasurementParticlesMap="meas_ptcl_map",
-            inputSimHits=simAlg.config.outputSimHits,
+            # inputSimHits=simAlg.config.outputSimHits,
+            outputParticleMeasurementsMap="particle_measurements_map",
             inputDir=str(""),
         )
     )
+
+    # Read fake simhits
+    s.addReader(
+        acts.examples.RootSimHitReader(
+            level=acts.logging.INFO,
+            filePath="./fakesimhits.root",
+            outputSimHits="simhits",
+        )
+    )
+    # s.addReader(
+    #     acts.examples.CsvSimHitReader(
+    #         level=acts.logging.INFO,
+    #         outputSimHits="simhits",
+    #         filePath="./fakesimhits.csv",
+    #     )
+    # )
+
+    # Create truth_particle_tracks for gx2f
+    s.addAlgorithm(
+      acts.examples.TruthTrackFinder(
+        level=acts.logging.INFO,
+        inputParticles="particles_generated",
+        inputMeasurements="measurements",
+        inputParticleMeasurementsMap="particle_measurements_map",
+        inputSimHits="simhits",
+        inputMeasurementSimHitsMap="measurement_simhits_map",
+        outputProtoTracks="truth_particle_tracks",
+      )
+    )
+
+    # Set up the fitter
+    addGx2fTracks(
+        s,
+        trackingGeometry,
+        field,
+        nUpdateMax=17,
+        relChi2changeCutOff=1e-7,
+        multipleScattering=True,
+    )
+
+    # s.addAlgorithm(
+    #     acts.examples.TrackSelectorAlgorithm(
+    #         level=acts.logging.INFO,
+    #         inputTracks="tracks",
+    #         outputTracks="selected-tracks",
+    #         selectorConfig=acts.TrackSelector.Config(
+    #             minMeasurements=7,
+    #         ),
+    #     )
+    # )
+    # s.addWhiteboardAlias("tracks", "selected-tracks")
+    #
+    # s.addWriter(
+    #     acts.examples.RootTrackStatesWriter(
+    #         level=acts.logging.INFO,
+    #         inputTracks="tracks",
+    #         inputParticles="particles_selected",
+    #         inputTrackParticleMatching="track_particle_matching",
+    #         inputSimHits="simhits",
+    #         inputMeasurementSimHitsMap="measurement_simhits_map",
+    #         filePath=str(outputDir / "trackstates_gx2f.root"),
+    #     )
+    # )
+    #
+    # s.addWriter(
+    #     acts.examples.RootTrackSummaryWriter(
+    #         level=acts.logging.INFO,
+    #         inputTracks="tracks",
+    #         inputParticles="particles_selected",
+    #         inputTrackParticleMatching="track_particle_matching",
+    #         filePath=str(outputDir / "tracksummary_gx2f.root"),
+    #         writeGx2fSpecific=True,
+    #     )
+    # )
+
 
 
     # algSequence = runGeant4(

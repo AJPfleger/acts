@@ -49,6 +49,7 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
   m_outputMeasurementParticlesMap.maybeInitialize(
       m_cfg.outputMeasurementParticlesMap);
   m_inputHits.maybeInitialize(m_cfg.inputSimHits);
+  m_outputParticleMeasurementsMap.maybeInitialize(m_cfg.outputParticleMeasurementsMap);
 
   // Check if event ranges match (should also catch missing files)
   auto checkRange = [&](const std::string& fileStem) {
@@ -328,5 +329,9 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   auto clusters = makeClusters(cellDataMap, orderedMeasurements.size());
   m_outputClusters(ctx, std::move(clusters));
 
+  IndexMultimap<SimBarcode> measurementParticlesMap;
+  measurementParticlesMap.reserve(5);
+    m_outputParticleMeasurementsMap(
+        ctx, invertIndexMultimap(measurementParticlesMap));
   return ActsExamples::ProcessCode::SUCCESS;
 }

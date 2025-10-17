@@ -120,8 +120,8 @@ for (auto& msp_vec : all_msp) {
 
     auto measurement = createMeasurement(measurements, geoId, dParameters);
     mapOriginal.insert(std::pair<Index, Index>{i, i});
-    i++;
   }
+  i++;
   break;
 }
 
@@ -138,9 +138,49 @@ auto writeTool = GenericReadWriteTool<>()
         .add(writerConfig.inputMeasurementSimHitsMap, mapOriginal);
 
 writeTool.write(writer);
-    
 
-// std::cout << msp << std::endl;
+
+    // Write the fake simhits
+{
+  auto simhits1 = makeTestSimhits(20);
+
+  ///////////
+  // Write //
+  ///////////
+  RootSimHitWriter::Config SHwriterConfig;
+  SHwriterConfig.inputSimHits = "simhits";
+  SHwriterConfig.filePath = "./fakesimhits.root";
+
+  RootSimHitWriter SHwriter(SHwriterConfig, Logging::WARNING);
+
+  auto SHreadWriteTool =
+      GenericReadWriteTool<>().add(SHwriterConfig.inputSimHits, simhits1);
+
+  // Write two different events
+  SHreadWriteTool.write(SHwriter, 11);
+
+  SHwriter.finalize();
+}
+// {
+//   auto simhits1 = makeTestSimhits(20);
+//
+//   ///////////
+//   // Write //
+//   ///////////
+//   CsvSimHitWriter::Config SHwriterConfig;
+//   SHwriterConfig.inputSimHits = "simhits";
+//   SHwriterConfig.filePath = "./fakesimhits.csv";
+//
+//   CsvSimHitWriter SHwriter(SHwriterConfig, Logging::WARNING);
+//
+//   auto SHreadWriteTool =
+//       GenericReadWriteTool<>().add(SHwriterConfig.inputSimHits, simhits1);
+//
+//   // Write two different events
+//   SHreadWriteTool.write(SHwriter, 11);
+//
+//   SHwriter.finalize();
+// }
 }
 
 // BOOST_AUTO_TEST_CASE(RoundTripTest) {

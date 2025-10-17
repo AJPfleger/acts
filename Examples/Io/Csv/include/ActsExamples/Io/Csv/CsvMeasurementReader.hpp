@@ -66,6 +66,9 @@ class CsvMeasurementReader final : public IReader {
     /// Output  measurement to particle collection (optional)
     /// @note Only filled if inputSimHits is given
     std::string outputMeasurementParticlesMap;
+
+    /// Output collection to map particles to measurements.
+    std::string outputParticleMeasurementsMap = "particle_measurements_map";
   };
 
   /// Construct the cluster reader.
@@ -104,6 +107,9 @@ class CsvMeasurementReader final : public IReader {
       m_outputMeasurementParticlesMap{this, "OutputMeasurementParticlesMap"};
 
   ReadDataHandle<SimHitContainer> m_inputHits{this, "InputHits"};
+
+  WriteDataHandle<InverseMultimap<SimBarcode>> m_outputParticleMeasurementsMap{
+      this, "OutputParticleMeasurementsMap"};
 };
 
 }  // namespace ActsExamples
