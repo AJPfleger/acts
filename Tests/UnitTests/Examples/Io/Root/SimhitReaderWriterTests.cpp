@@ -157,7 +157,7 @@ writeTool.write(writer);
       GenericReadWriteTool<>().add(SHwriterConfig.inputSimHits, simhits1);
 
   // Write two different events
-  SHreadWriteTool.write(SHwriter, 11);
+  SHreadWriteTool.write(SHwriter, 0);
 
   SHwriter.finalize();
 }

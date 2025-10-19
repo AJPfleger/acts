@@ -147,7 +147,7 @@ def main():
             level=acts.logging.INFO,
             outputMeasurements="measurements",
             outputMeasurementSimHitsMap="measurement_simhits_map",
-            outputMeasurementParticlesMap="meas_ptcl_map",
+            outputMeasurementParticlesMap="measurement_particles_map",
             # inputSimHits=simAlg.config.outputSimHits,
             outputParticleMeasurementsMap="particle_measurements_map",
             inputDir=str(""),
@@ -276,7 +276,7 @@ def main():
     #
     #     writer.write(context, trackingGeometry)
     #
-    # algSequence.run()
+    s.run()
 
 
 if __name__ == "__main__":
