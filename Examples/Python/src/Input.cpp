@@ -43,7 +43,7 @@ void addInput(Context& ctx) {
   ACTS_PYTHON_DECLARE_READER(CsvMeasurementReader, mex, "CsvMeasurementReader",
                              inputDir, outputMeasurements,
                              outputMeasurementSimHitsMap, outputClusters,
-                             outputMeasurementParticlesMap, inputSimHits, outputParticleMeasurementsMap);
+                             outputMeasurementParticlesMap, inputSimHits, outputParticleMeasurementsMap, geometry4track);
   ACTS_PYTHON_DECLARE_READER(CsvSimHitReader, mex, "CsvSimHitReader", inputDir,
                              inputStem, outputSimHits);
   ACTS_PYTHON_DECLARE_READER(CsvMuonSegmentReader, mex, "CsvMuonSegmentReader",

@@ -77,7 +77,7 @@ class CsvMeasurementReader final : public IReader {
     std::string outputTrackParameters = "estimatedparameters";
    
     /// Geometry
-    Acts::TrackingGeometry geometry4track;
+    std::shared_ptr<Acts::TrackingGeometry> geometry4track;
   };
 
   /// Construct the cluster reader.
@@ -123,7 +123,7 @@ class CsvMeasurementReader final : public IReader {
   WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
       this, "OutputTrackParameters"};
 
-  Acts::TrackingGeometry m_geometry4track{};
+  std::shared_ptr<Acts::TrackingGeometry> m_geometry4track{};
 };
 
 }  // namespace ActsExamples

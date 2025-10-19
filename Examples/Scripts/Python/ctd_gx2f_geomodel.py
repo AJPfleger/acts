@@ -183,7 +183,7 @@ def main():
         outputProtoTracks="truth_particle_tracks",
       )
     )
-
+    s.addWhiteboardAlias("particles", "particles_generated")
     # Set up the fitter
     addGx2fTracks(
         s,

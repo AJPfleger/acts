@@ -56,7 +56,7 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
   m_inputHits.maybeInitialize(m_cfg.inputSimHits);
   m_outputParticleMeasurementsMap.maybeInitialize(m_cfg.outputParticleMeasurementsMap);
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
-  m_geometry4track{m_cfg.geometry4track};
+  m_geometry4track = m_cfg.geometry4track;
 
   // Check if event ranges match (should also catch missing files)
   auto checkRange = [&](const std::string& fileStem) {
@@ -408,7 +408,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     trackParameters.reserve(5);
 
 
-    const Acts::Surface* surface = m_geometry4track.findSurface(geoId_sp1);
+    const Acts::Surface* surface = m_geometry4track->findSurface(geoId_sp1);
 
 
 //  Row   * Instance * global_po * global_po * global_po *
