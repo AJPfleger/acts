@@ -218,9 +218,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
   std::unordered_map<GeometryIdentifier, double> strawTimes{};
   std::multimap<GeometryIdentifier, std::array<double, 3>> stripTimes{};
 
-
-
-
   ACTS_DEBUG("Starting loop over modules ...");
   for (const auto& simHitsGroup : groupByModule(gotSimHits)) {
     // Manual pair unpacking instead of using
@@ -242,7 +239,6 @@ ProcessCode MuonSpacePointDigitizer::execute(
       return ProcessCode::ABORT;
     }
 
-
     /// Geometric digitizer
     ActsFatras::Channelizer channelizer;
 
@@ -251,214 +247,219 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
     const Transform3& surfLocToGlob{hitSurf->transform(gctx)};
 
-  // Iterate over all simHits in a single module
-  for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
-    const auto& simHit = *h;
-    const auto simHitIdx = gotSimHits.index_of(h);
+    // Iterate over all simHits in a single module
+    for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
+      const auto& simHit = *h;
+      const auto simHitIdx = gotSimHits.index_of(h);
 
-    // Convert the hit trajectory into local coordinates
-    const Vector3 locPos = surfLocToGlob.inverse() * simHit.position();
-    const Vector3 locDir = surfLocToGlob.inverse().linear() * simHit.direction();
+      // Convert the hit trajectory into local coordinates
+      const Vector3 locPos = surfLocToGlob.inverse() * simHit.position();
+      const Vector3 locDir =
+          surfLocToGlob.inverse().linear() * simHit.direction();
 
-    const auto& bounds = hitSurf->bounds();
-    ACTS_DEBUG("Process hit: "
-               << toString(locPos) << ", dir: " << toString(locDir)
-               << "recorded in a "
-               << Surface::s_surfaceTypeNames[toUnderlying(hitSurf->type())]
-               << " surface with id: " << moduleGeoId << ", bounds: " << bounds);
-    bool convertSp{true};
+      const auto& bounds = hitSurf->bounds();
+      ACTS_DEBUG("Process hit: "
+                 << toString(locPos) << ", dir: " << toString(locDir)
+                 << "recorded in a "
+                 << Surface::s_surfaceTypeNames[toUnderlying(hitSurf->type())]
+                 << " surface with id: " << moduleGeoId
+                 << ", bounds: " << bounds);
+      bool convertSp{true};
 
-    MuonSpacePoint newSp{};
-    newSp.setGeometryId(moduleGeoId);
+      MuonSpacePoint newSp{};
+      newSp.setGeometryId(moduleGeoId);
 
-    /// Transformation to the common coordinate system of all space points
-    const Transform3 parentTrf{toSpacePointFrame(gctx, moduleGeoId)};
+      /// Transformation to the common coordinate system of all space points
+      const Transform3 parentTrf{toSpacePointFrame(gctx, moduleGeoId)};
 
-    const auto& calibCfg = calibrator().config();
-    switch (hitSurf->type()) {
-      /// Strip measurements
-      using enum Surface::SurfaceType;
-      case Plane: {
-        ACTS_VERBOSE("Hit is recorded in a strip detector ");
-        auto planeCross = intersectPlane(locPos, locDir, Vector3::UnitZ(), 0.);
-        const auto hitPos = planeCross.position();
-        Vector3 smearedHit{Vector3::Zero()};
-        switch (bounds.type()) {
-          case SurfaceBounds::BoundsType::eRectangle: {
-            smearedHit[ePos0] =
-                quantize(hitPos[ePos0], calibCfg.rpcPhiStripPitch);
-            smearedHit[ePos1] =
-                quantize(hitPos[ePos1], calibCfg.rpcEtaStripPitch);
-            ACTS_VERBOSE("Position before "
-                         << toString(hitPos) << ", after smearing"
-                         << toString(smearedHit) << ", " << bounds);
+      const auto& calibCfg = calibrator().config();
+      switch (hitSurf->type()) {
+        /// Strip measurements
+        using enum Surface::SurfaceType;
+        case Plane: {
+          ACTS_VERBOSE("Hit is recorded in a strip detector ");
+          auto planeCross =
+              intersectPlane(locPos, locDir, Vector3::UnitZ(), 0.);
+          const auto hitPos = planeCross.position();
+          Vector3 smearedHit{Vector3::Zero()};
+          switch (bounds.type()) {
+            case SurfaceBounds::BoundsType::eRectangle: {
+              smearedHit[ePos0] =
+                  quantize(hitPos[ePos0], calibCfg.rpcPhiStripPitch);
+              smearedHit[ePos1] =
+                  quantize(hitPos[ePos1], calibCfg.rpcEtaStripPitch);
+              ACTS_VERBOSE("Position before "
+                           << toString(hitPos) << ", after smearing"
+                           << toString(smearedHit) << ", " << bounds);
 
-            if (!bounds.inside(Vector2{smearedHit[ePos0], smearedHit[ePos1]})) {
-              convertSp = false;
-              break;
-            }
-            auto ranges = stripTimes.equal_range(moduleGeoId);
-            for (auto digitHitItr = ranges.first; digitHitItr != ranges.second;
-                 ++digitHitItr) {
-              const auto& existCoords = digitHitItr->second;
-              /// Same virtual strip point is digitized
-              if (std::abs(existCoords[0] - smearedHit[ePos0]) <
-                      std::numeric_limits<double>::epsilon() &&
-                  std::abs(existCoords[1] - smearedHit[ePos1]) <
-                      std::numeric_limits<double>::epsilon() &&
-                  simHit.time() - existCoords[2] < config().rpcDeadTime) {
+              if (!bounds.inside(
+                      Vector2{smearedHit[ePos0], smearedHit[ePos1]})) {
                 convertSp = false;
                 break;
               }
-              if (!convertSp) {
-                break;
+              auto ranges = stripTimes.equal_range(moduleGeoId);
+              for (auto digitHitItr = ranges.first;
+                   digitHitItr != ranges.second; ++digitHitItr) {
+                const auto& existCoords = digitHitItr->second;
+                /// Same virtual strip point is digitized
+                if (std::abs(existCoords[0] - smearedHit[ePos0]) <
+                        std::numeric_limits<double>::epsilon() &&
+                    std::abs(existCoords[1] - smearedHit[ePos1]) <
+                        std::numeric_limits<double>::epsilon() &&
+                    simHit.time() - existCoords[2] < config().rpcDeadTime) {
+                  convertSp = false;
+                  break;
+                }
+                if (!convertSp) {
+                  break;
+                }
               }
-            }
-            /// Mark the
-            stripTimes.insert(std::make_pair(
-                moduleGeoId,
-                std::array{smearedHit[ePos0], smearedHit[ePos1], simHit.time()}));
+              /// Mark the
+              stripTimes.insert(std::make_pair(
+                  moduleGeoId, std::array{smearedHit[ePos0], smearedHit[ePos1],
+                                          simHit.time()}));
 
-            /// Time digitization
-            if (config().digitizeTime) {
-              assert(calibCfg.rpcTimeResolution > 0.);
-              const double stripTime =
-                  (*Digitization::Gauss{calibCfg.rpcTimeResolution}(simHit.time(),
-                                                                    rndEngine))
-                      .first;
-              newSp.setTime(stripTime);
-            }
-            newSp.setCovariance(
-                calibCfg.rpcPhiStripPitch, calibCfg.rpcEtaStripPitch,
-                m_cfg.digitizeTime ? calibCfg.rpcTimeResolution : 0.);
+              /// Time digitization
+              if (config().digitizeTime) {
+                assert(calibCfg.rpcTimeResolution > 0.);
+                const double stripTime =
+                    (*Digitization::Gauss{calibCfg.rpcTimeResolution}(
+                         simHit.time(), rndEngine))
+                        .first;
+                newSp.setTime(stripTime);
+              }
+              newSp.setCovariance(
+                  calibCfg.rpcPhiStripPitch, calibCfg.rpcEtaStripPitch,
+                  m_cfg.digitizeTime ? calibCfg.rpcTimeResolution : 0.);
 
+              break;
+            }
+            /// Endcap strips not yet available
+            case SurfaceBounds::BoundsType::eTrapezoid:
+              break;
+            default:
+              convertSp = false;
+          }
+          /// Implement a dead time
+          if (convertSp) {
+            newSp.defineCoordinates(
+                Vector3{parentTrf * smearedHit},
+                Vector3{parentTrf.linear() * Vector3::UnitY()},
+                Vector3{parentTrf.linear() * Vector3::UnitX()});
+            MuonId_t id{};
+            /// @todo Refine me using the volume name
+            id.setChamber(MuonId_t::StationName::BIS,
+                          simHit.position().z() > 0 ? MuonId_t::DetSide::A
+                                                    : MuonId_t::DetSide::C,
+                          1, MuonId_t::TechField::Rpc);
+            id.setCoordFlags(true, true);
+            newSp.setId(id);
+          }
+
+          break;
+        }
+        case Straw: {
+          auto closeApproach = lineIntersect<3>(
+              Vector3::Zero(), Vector3::UnitZ(), locPos, locDir);
+          const auto nominalPos = closeApproach.position();
+          const double unsmearedR = fastHypot(nominalPos.x(), nominalPos.y());
+          ACTS_VERBOSE("Hit is recorded in a straw detector, R: "
+                       << unsmearedR << ", " << bounds);
+
+          const double uncert = calibrator().driftRadiusUncert(unsmearedR);
+          /// Reject unsmearable hits
+          if (uncert <= std::numeric_limits<double>::epsilon()) {
+            convertSp = false;
             break;
           }
-          /// Endcap strips not yet available
-          case SurfaceBounds::BoundsType::eTrapezoid:
-            break;
-          default:
+          const double driftR =
+              (*Digitization::Gauss{uncert}(unsmearedR, rndEngine)).first;
+          // bounds
+          const auto& lBounds = static_cast<const LineBounds&>(bounds);
+          const double maxR = lBounds.get(LineBounds::eR);
+          const double maxZ = lBounds.get(LineBounds::eHalfLengthZ);
+          /// The generated hit is unphysical
+          if (driftR < 0. || driftR > maxR || std::abs(nominalPos.z()) > maxZ) {
             convertSp = false;
-        }
-        /// Implement a dead time
-        if (convertSp) {
+            break;
+          }
+          if (auto insertItr =
+                  strawTimes.insert(std::make_pair(moduleGeoId, simHit.time()));
+              !insertItr.second) {
+            if (simHit.time() - insertItr.first->second > m_cfg.strawDeadTime) {
+              insertItr.first->second = simHit.time();
+            } else {
+              convertSp = false;
+              break;
+            }
+          }
+
+          newSp.setRadius(driftR);
+          newSp.setCovariance(square(0.5 * maxZ),
+                              calibrator().driftRadiusUncert(driftR), 0.);
           newSp.defineCoordinates(
-              Vector3{parentTrf * smearedHit},
-              Vector3{parentTrf.linear() * Vector3::UnitY()},
+              Vector3{parentTrf.translation()},
+              Vector3{parentTrf.linear() * Vector3::UnitZ()},
               Vector3{parentTrf.linear() * Vector3::UnitX()});
           MuonId_t id{};
           /// @todo Refine me using the volume name
           id.setChamber(MuonId_t::StationName::BIS,
                         simHit.position().z() > 0 ? MuonId_t::DetSide::A
-                                               : MuonId_t::DetSide::C,
-                        1, MuonId_t::TechField::Rpc);
-          id.setCoordFlags(true, true);
+                                                  : MuonId_t::DetSide::C,
+                        1, MuonId_t::TechField::Mdt);
+          id.setCoordFlags(true, false);
           newSp.setId(id);
-        }
 
-        break;
-      }
-      case Straw: {
-        auto closeApproach =
-            lineIntersect<3>(Vector3::Zero(), Vector3::UnitZ(), locPos, locDir);
-        const auto nominalPos = closeApproach.position();
-        const double unsmearedR = fastHypot(nominalPos.x(), nominalPos.y());
-        ACTS_VERBOSE("Hit is recorded in a straw detector, R: "
-                     << unsmearedR << ", " << bounds);
+          // Now set measurement and maps
+          DigitizedParameters dParameters;
 
-        const double uncert = calibrator().driftRadiusUncert(unsmearedR);
-        /// Reject unsmearable hits
-        if (uncert <= std::numeric_limits<double>::epsilon()) {
-          convertSp = false;
+          auto cov = newSp.covariance();
+          // this one should be z-distance
+          dParameters.indices.push_back(Acts::eBoundLoc0);
+          dParameters.values.push_back(locPos[0]);
+          dParameters.variances.push_back(cov[0]);
+
+          dParameters.indices.push_back(Acts::eBoundLoc1);
+          dParameters.values.push_back(driftR);
+          dParameters.variances.push_back(cov[1]);
+
+          auto measurement =
+              createMeasurement(measurements, moduleGeoId, dParameters);
+          measurementParticlesMap.emplace_hint(
+              measurementParticlesMap.end(), measurement.index(),
+              gotSimHits.nth(simHitIdx)->particleId());
+          measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
+                                             measurement.index(), simHitIdx);
+
           break;
         }
-        const double driftR =
-            (*Digitization::Gauss{uncert}(unsmearedR, rndEngine)).first;
-        // bounds
-        const auto& lBounds = static_cast<const LineBounds&>(bounds);
-        const double maxR = lBounds.get(LineBounds::eR);
-        const double maxZ = lBounds.get(LineBounds::eHalfLengthZ);
-        /// The generated hit is unphysical
-        if (driftR < 0. || driftR > maxR || std::abs(nominalPos.z()) > maxZ) {
+        default:
           convertSp = false;
-          break;
-        }
-        if (auto insertItr =
-                strawTimes.insert(std::make_pair(moduleGeoId, simHit.time()));
-            !insertItr.second) {
-          if (simHit.time() - insertItr.first->second > m_cfg.strawDeadTime) {
-            insertItr.first->second = simHit.time();
-          } else {
-            convertSp = false;
-            break;
-          }
-        }
-
-        newSp.setRadius(driftR);
-        newSp.setCovariance(square(0.5 * maxZ),
-                            calibrator().driftRadiusUncert(driftR), 0.);
-        newSp.defineCoordinates(Vector3{parentTrf.translation()},
-                                Vector3{parentTrf.linear() * Vector3::UnitZ()},
-                                Vector3{parentTrf.linear() * Vector3::UnitX()});
-        MuonId_t id{};
-        /// @todo Refine me using the volume name
-        id.setChamber(MuonId_t::StationName::BIS,
-                      simHit.position().z() > 0 ? MuonId_t::DetSide::A
-                                             : MuonId_t::DetSide::C,
-                      1, MuonId_t::TechField::Mdt);
-        id.setCoordFlags(true, false);
-        newSp.setId(id);
-
-            // Now set measurement and maps
-            DigitizedParameters dParameters;
-
-            auto cov = newSp.covariance();
-            // this one should be z-distance
-            dParameters.indices.push_back(Acts::eBoundLoc0);
-            dParameters.values.push_back(locPos[0]);
-            dParameters.variances.push_back(cov[0]);
-
-            dParameters.indices.push_back(Acts::eBoundLoc1);
-            dParameters.values.push_back(driftR);
-            dParameters.variances.push_back(cov[1]);
-
-            auto measurement = createMeasurement(measurements, moduleGeoId, dParameters);
-              measurementParticlesMap.emplace_hint(measurementParticlesMap.end(), measurement.index(), gotSimHits.nth(simHitIdx)->particleId());
-              measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(), measurement.index(), simHitIdx);
-
-
-
-        break;
       }
-      default:
-        convertSp = false;
-    }
 
-    if (convertSp) {
-      spacePointsPerChamber[toChamberId(moduleGeoId)].push_back(std::move(newSp));
-    }
-  }
-
-  for (auto& [volId, bucket] : spacePointsPerChamber) {
-    std::ranges::sort(bucket,
-                      [](const MuonSpacePoint& a, const MuonSpacePoint& b) {
-                        return a.localPosition().z() < b.localPosition().z();
-                      });
-    if (logger().doPrint(Logging::Level::VERBOSE)) {
-      std::stringstream sstr{};
-      for (const auto& spacePoint : bucket) {
-        sstr << " *** " << spacePoint << std::endl;
+      if (convertSp) {
+        spacePointsPerChamber[toChamberId(moduleGeoId)].push_back(
+            std::move(newSp));
       }
-      ACTS_VERBOSE("Safe " << bucket.size() << " space points for chamber "
-                           << volId << "\n"
-                           << sstr.str());
     }
-    visualizeBucket(ctx, gctx, bucket);
-    outSpacePoints.push_back(std::move(bucket));
-  }
 
-
-
+    for (auto& [volId, bucket] : spacePointsPerChamber) {
+      std::ranges::sort(bucket,
+                        [](const MuonSpacePoint& a, const MuonSpacePoint& b) {
+                          return a.localPosition().z() < b.localPosition().z();
+                        });
+      if (logger().doPrint(Logging::Level::VERBOSE)) {
+        std::stringstream sstr{};
+        for (const auto& spacePoint : bucket) {
+          sstr << " *** " << spacePoint << std::endl;
+        }
+        ACTS_VERBOSE("Safe " << bucket.size() << " space points for chamber "
+                             << volId << "\n"
+                             << sstr.str());
+      }
+      visualizeBucket(ctx, gctx, bucket);
+      outSpacePoints.push_back(std::move(bucket));
+    }
   }
 
   m_outputSpacePoints(ctx, std::move(outSpacePoints));
