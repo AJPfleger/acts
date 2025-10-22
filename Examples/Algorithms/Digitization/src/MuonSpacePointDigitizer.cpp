@@ -20,8 +20,10 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/MathHelpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/EventData/MuonSpacePoint.hpp"
+#include "ActsFatras/Digitization/Channelizer.hpp"
 
 #include <algorithm>
 #include <format>
@@ -110,12 +112,38 @@ MuonSpacePointDigitizer::MuonSpacePointDigitizer(const Config& cfg,
   if (m_cfg.outputSpacePoints.empty()) {
     throw std::invalid_argument("No output space points were defined");
   }
+  if (m_cfg.outputMeasurements.empty()) {
+    throw std::invalid_argument("Missing measurements output collection");
+  }
+  if (m_cfg.outputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument(
+        "Missing hit-to-particles map output collection");
+  }
+  if (m_cfg.outputMeasurementSimHitsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing hit-to-simulated-hits map output collection");
+  }
+  if (m_cfg.outputParticleMeasurementsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing particle-to-measurements map output collection");
+  }
+  if (m_cfg.outputSimHitMeasurementsMap.empty()) {
+    throw std::invalid_argument(
+        "Missing particle-to-simulated-hits map output collection");
+  }
   ACTS_DEBUG("Retrieve sim hits and particles from "
              << m_cfg.inputSimHits << " & " << m_cfg.inputParticles);
   ACTS_DEBUG("Write produced space points to " << m_cfg.outputSpacePoints);
   m_inputSimHits.initialize(m_cfg.inputSimHits);
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
+  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  m_outputMeasurementParticlesMap.initialize(
+      m_cfg.outputMeasurementParticlesMap);
+  m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
+  m_outputParticleMeasurementsMap.initialize(
+      m_cfg.outputParticleMeasurementsMap);
+  m_outputSimHitMeasurementsMap.initialize(m_cfg.outputSimHitMeasurementsMap);
 }
 
 ProcessCode MuonSpacePointDigitizer::initialize() {
@@ -173,6 +201,16 @@ ProcessCode MuonSpacePointDigitizer::execute(
 
   GeometryContext gctx{};
 
+  // Prepare output containers
+  // need list here for stable addresses
+  MeasurementContainer measurements;
+
+  IndexMultimap<SimBarcode> measurementParticlesMap;
+  IndexMultimap<Index> measurementSimHitsMap;
+  measurements.reserve(gotSimHits.size());
+  measurementParticlesMap.reserve(gotSimHits.size());
+  measurementSimHitsMap.reserve(gotSimHits.size());
+
   using MuonId_t = MuonSpacePoint::MuonId;
   auto rndEngine = m_cfg.randomNumbers->spawnGenerator(ctx);
   /// temporary output container to group the hits per chamber volume
@@ -180,31 +218,61 @@ ProcessCode MuonSpacePointDigitizer::execute(
   std::unordered_map<GeometryIdentifier, double> strawTimes{};
   std::multimap<GeometryIdentifier, std::array<double, 3>> stripTimes{};
 
-  for (const auto& hit : gotSimHits) {
-    const GeometryIdentifier hitId = hit.geometryId();
 
-    const Surface* hitSurf = trackingGeometry().findSurface(hitId);
+
+
+  ACTS_DEBUG("Starting loop over modules ...");
+  for (const auto& simHitsGroup : groupByModule(gotSimHits)) {
+    // Manual pair unpacking instead of using
+    //   auto [moduleGeoId, moduleSimHits] : ...
+    // otherwise clang on macos complains that it is unable to capture the local
+    // binding in the lambda used for visiting the smearer below.
+    Acts::GeometryIdentifier moduleGeoId = simHitsGroup.first;
+    const auto& moduleSimHits = simHitsGroup.second;
+
+    std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
+        surfaceByIdentifier = m_cfg.trackingGeometry->geoIdSurfaceMap();
+    auto surfaceItr = surfaceByIdentifier.find(moduleGeoId);
+
+    if (surfaceItr == surfaceByIdentifier.end()) {
+      // this is either an invalid geometry id or a misconfigured smearer
+      // setup; both cases can not be handled and should be fatal.
+      ACTS_ERROR("Could not find surface " << moduleGeoId
+                                           << " for configured smearer");
+      return ProcessCode::ABORT;
+    }
+
+
+    /// Geometric digitizer
+    ActsFatras::Channelizer channelizer;
+
+    const Surface* hitSurf = surfaceItr->second;
     assert(hitSurf != nullptr);
 
     const Transform3& surfLocToGlob{hitSurf->transform(gctx)};
 
+  // Iterate over all simHits in a single module
+  for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
+    const auto& simHit = *h;
+    const auto simHitIdx = gotSimHits.index_of(h);
+
     // Convert the hit trajectory into local coordinates
-    const Vector3 locPos = surfLocToGlob.inverse() * hit.position();
-    const Vector3 locDir = surfLocToGlob.inverse().linear() * hit.direction();
+    const Vector3 locPos = surfLocToGlob.inverse() * simHit.position();
+    const Vector3 locDir = surfLocToGlob.inverse().linear() * simHit.direction();
 
     const auto& bounds = hitSurf->bounds();
     ACTS_DEBUG("Process hit: "
                << toString(locPos) << ", dir: " << toString(locDir)
                << "recorded in a "
                << Surface::s_surfaceTypeNames[toUnderlying(hitSurf->type())]
-               << " surface with id: " << hitId << ", bounds: " << bounds);
+               << " surface with id: " << moduleGeoId << ", bounds: " << bounds);
     bool convertSp{true};
 
     MuonSpacePoint newSp{};
-    newSp.setGeometryId(hitId);
+    newSp.setGeometryId(moduleGeoId);
 
     /// Transformation to the common coordinate system of all space points
-    const Transform3 parentTrf{toSpacePointFrame(gctx, hitId)};
+    const Transform3 parentTrf{toSpacePointFrame(gctx, moduleGeoId)};
 
     const auto& calibCfg = calibrator().config();
     switch (hitSurf->type()) {
@@ -229,7 +297,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
               convertSp = false;
               break;
             }
-            auto ranges = stripTimes.equal_range(hitId);
+            auto ranges = stripTimes.equal_range(moduleGeoId);
             for (auto digitHitItr = ranges.first; digitHitItr != ranges.second;
                  ++digitHitItr) {
               const auto& existCoords = digitHitItr->second;
@@ -238,7 +306,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
                       std::numeric_limits<double>::epsilon() &&
                   std::abs(existCoords[1] - smearedHit[ePos1]) <
                       std::numeric_limits<double>::epsilon() &&
-                  hit.time() - existCoords[2] < config().rpcDeadTime) {
+                  simHit.time() - existCoords[2] < config().rpcDeadTime) {
                 convertSp = false;
                 break;
               }
@@ -248,14 +316,14 @@ ProcessCode MuonSpacePointDigitizer::execute(
             }
             /// Mark the
             stripTimes.insert(std::make_pair(
-                hitId,
-                std::array{smearedHit[ePos0], smearedHit[ePos1], hit.time()}));
+                moduleGeoId,
+                std::array{smearedHit[ePos0], smearedHit[ePos1], simHit.time()}));
 
             /// Time digitization
             if (config().digitizeTime) {
               assert(calibCfg.rpcTimeResolution > 0.);
               const double stripTime =
-                  (*Digitization::Gauss{calibCfg.rpcTimeResolution}(hit.time(),
+                  (*Digitization::Gauss{calibCfg.rpcTimeResolution}(simHit.time(),
                                                                     rndEngine))
                       .first;
               newSp.setTime(stripTime);
@@ -281,7 +349,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
           MuonId_t id{};
           /// @todo Refine me using the volume name
           id.setChamber(MuonId_t::StationName::BIS,
-                        hit.position().z() > 0 ? MuonId_t::DetSide::A
+                        simHit.position().z() > 0 ? MuonId_t::DetSide::A
                                                : MuonId_t::DetSide::C,
                         1, MuonId_t::TechField::Rpc);
           id.setCoordFlags(true, true);
@@ -316,10 +384,10 @@ ProcessCode MuonSpacePointDigitizer::execute(
           break;
         }
         if (auto insertItr =
-                strawTimes.insert(std::make_pair(hitId, hit.time()));
+                strawTimes.insert(std::make_pair(moduleGeoId, simHit.time()));
             !insertItr.second) {
-          if (hit.time() - insertItr.first->second > m_cfg.strawDeadTime) {
-            insertItr.first->second = hit.time();
+          if (simHit.time() - insertItr.first->second > m_cfg.strawDeadTime) {
+            insertItr.first->second = simHit.time();
           } else {
             convertSp = false;
             break;
@@ -335,20 +403,39 @@ ProcessCode MuonSpacePointDigitizer::execute(
         MuonId_t id{};
         /// @todo Refine me using the volume name
         id.setChamber(MuonId_t::StationName::BIS,
-                      hit.position().z() > 0 ? MuonId_t::DetSide::A
+                      simHit.position().z() > 0 ? MuonId_t::DetSide::A
                                              : MuonId_t::DetSide::C,
                       1, MuonId_t::TechField::Mdt);
         id.setCoordFlags(true, false);
         newSp.setId(id);
+
+            // Now set measurement and maps
+            DigitizedParameters dParameters;
+
+            auto cov = newSp.covariance();
+            // this one should be z-distance
+            dParameters.indices.push_back(Acts::eBoundLoc0);
+            dParameters.values.push_back(locPos[0]);
+            dParameters.variances.push_back(cov[0]);
+
+            dParameters.indices.push_back(Acts::eBoundLoc1);
+            dParameters.values.push_back(driftR);
+            dParameters.variances.push_back(cov[1]);
+
+            auto measurement = createMeasurement(measurements, moduleGeoId, dParameters);
+              measurementParticlesMap.emplace_hint(measurementParticlesMap.end(), measurement.index(), gotSimHits.nth(simHitIdx)->particleId());
+              measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(), measurement.index(), simHitIdx);
+
+
+
         break;
       }
-      ///
       default:
         convertSp = false;
     }
 
     if (convertSp) {
-      spacePointsPerChamber[toChamberId(hitId)].push_back(std::move(newSp));
+      spacePointsPerChamber[toChamberId(moduleGeoId)].push_back(std::move(newSp));
     }
   }
 
@@ -369,7 +456,26 @@ ProcessCode MuonSpacePointDigitizer::execute(
     visualizeBucket(ctx, gctx, bucket);
     outSpacePoints.push_back(std::move(bucket));
   }
+
+
+
+  }
+
   m_outputSpacePoints(ctx, std::move(outSpacePoints));
+
+  ACTS_DEBUG("Created " << measurements.size() << " measurements from "
+                        << gotSimHits.size() << " sim hits.");
+
+  m_outputMeasurements(ctx, std::move(measurements));
+
+  // invert them before they are moved
+  m_outputParticleMeasurementsMap(ctx,
+                                  invertIndexMultimap(measurementParticlesMap));
+  m_outputSimHitMeasurementsMap(ctx,
+                                invertIndexMultimap(measurementSimHitsMap));
+
+  m_outputMeasurementParticlesMap(ctx, std::move(measurementParticlesMap));
+  m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
 
   return ProcessCode::SUCCESS;
 }
