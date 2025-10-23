@@ -96,8 +96,12 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
     }
     commonStations[parent].push_back(box);
   }
-  // Create a vector to hold the chambers
+  // Create a vector to hold the chambers and inner volumes
   std::vector<std::unique_ptr<Acts::TrackingVolume>> volChambers;
+  std::vector<
+      std::vector<std::shared_ptr<Acts::Experimental::StaticBlueprintNode>>>
+      innerVolumesNodes;
+  innerVolumesNodes.resize(commonStations.size());
 
   if (commonStations.empty()) {
     throw std::invalid_argument("No barrel stations could be found.");
@@ -131,7 +135,12 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
         trVol->addSurface(surface);
       }
 
-      chamberVolume->addVolume(std::move(trVol));
+      // chamberVolume->addVolume(std::move(trVol));
+      // create static blueprint node for the inner volume
+      auto innerNode =
+          std::make_shared<Acts::Experimental::StaticBlueprintNode>(
+              std::move(trVol));
+      innerVolumesNodes[stationNum - 2].push_back(std::move(innerNode));
     }
     volChambers.push_back(std::move(chamberVolume));
     maxZ = std::max(
@@ -158,10 +167,24 @@ GeoModelMuonMockupBuilder::buildBarrelNode(
 
   // create the bluprint nodes for the chambers and add them as children to the
   // cylinder barrel node
+  std::size_t chamberNum = 0;
   for (auto& chamber : volChambers) {
+    // auto innerVolumes = chamber->volumes();
     auto chamberNode =
         std::make_shared<Acts::Experimental::StaticBlueprintNode>(
             std::move(chamber));
+    // create also the blueprint nodes of the children volumes (e.g multilaers
+    // of MDTs)
+    for (auto& innerVolNode : innerVolumesNodes[chamberNum]) {
+      chamberNode->addChild(std::move(innerVolNode));
+    }
+    chamberNum += 1;
+    // for(auto& innerVol : innerVolumes){
+    //   auto innerNode =
+    //       std::make_shared<Acts::Experimental::StaticBlueprintNode>(
+    //           std::move(innerVol));
+    //   chamberNode->addChild(std::move(innerNode));
+    // }
     barrelNode->addChild(std::move(chamberNode));
   }
 
