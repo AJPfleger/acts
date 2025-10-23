@@ -76,7 +76,8 @@ void addDigitization(Context& ctx) {
       MuonSpacePointDigitizer, mex, "MuonSpacePointDigitizer", inputSimHits,
       inputParticles, outputSpacePoints, outputMeasurements,
       outputMeasurementParticlesMap, outputMeasurementSimHitsMap,
-      outputParticleMeasurementsMap, outputSimHitMeasurementsMap, randomNumbers,
+      outputParticleMeasurementsMap, outputSimHitMeasurementsMap,
+      outputTrackParameters, randomNumbers,
       /// @todo: Expose <calibrator> to python bindings
       trackingGeometry, digitizeTime, dumpVisualization, strawDeadTime);
 
