@@ -270,7 +270,7 @@ ProcessCode MuonSpacePointDigitizer::execute(
       const auto& bounds = hitSurf->bounds();
       ACTS_DEBUG("Process hit: "
                  << toString(locPos) << ", dir: " << toString(locDir)
-                 << "recorded in a "
+                 << " recorded in a "
                  << Surface::s_surfaceTypeNames[toUnderlying(hitSurf->type())]
                  << " surface with id: " << moduleGeoId
                  << ", bounds: " << bounds);
@@ -382,8 +382,11 @@ ProcessCode MuonSpacePointDigitizer::execute(
             convertSp = false;
             break;
           }
-          const double driftR =
+          double driftR =
               (*Digitization::Gauss{uncert}(unsmearedR, rndEngine)).first;
+
+          std::cout << driftR << " " << unsmearedR << " " << uncert
+                    << std::endl;
           // bounds
           const auto& lBounds = static_cast<const LineBounds&>(bounds);
           const double maxR = lBounds.get(LineBounds::eR);
@@ -404,7 +407,9 @@ ProcessCode MuonSpacePointDigitizer::execute(
             }
           }
 
-          const double sigmaZ = (0.5 * maxZ) / 1000.;
+          const double sigmaZ =
+              (0.5 * maxZ) /
+              20000.;  // to have it similar to the drift radius sigma
 
           auto smearedZ =
               (*Digitization::Gauss{sigmaZ}(nominalPos.z(), rndEngine)).first;
@@ -421,10 +426,12 @@ ProcessCode MuonSpacePointDigitizer::execute(
                     << std::endl;
           std::cout << "directionSimHitGlobal "
                     << simHit.direction().transpose() << std::endl;
-
+          if (nominalPos.x() > 0) {
+            driftR *= -1;
+            std::cout << "switched sign" << std::endl;
+          }
           newSp.setRadius(driftR);
-          newSp.setCovariance(square(sigmaZ),
-                              calibrator().driftRadiusUncert(driftR), 0.);
+          newSp.setCovariance(square(uncert), square(sigmaZ), 0.);
 
           newSp.defineCoordinates(
               Vector3{parentTrf.translation()},
@@ -464,6 +471,8 @@ ProcessCode MuonSpacePointDigitizer::execute(
           break;
         }
         default:
+          std::cout << "unsupported case in muon space point digitizer"
+                    << std::endl;
           convertSp = false;
       }
 
