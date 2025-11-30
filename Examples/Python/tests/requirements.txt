@@ -10,6 +10,8 @@ awkward==2.8.10
     #   uproot
 awkward-cpp==50
     # via awkward
+backports-zstd==1.1.0
+    # via pyhepmc
 cramjam==2.11.0
     # via uproot
 execnet==2.1.2
@@ -37,7 +39,7 @@ pluggy==1.6.0
     # via pytest
 pygments==2.19.2
     # via pytest
-pyhepmc==2.14.0
+pyhepmc==2.15.1
     # via -r Examples/Python/tests/requirements.in
 pytest==9.0.1
     # via
@@ -46,7 +48,7 @@ pytest==9.0.1
     #   pytest-repeat
     #   pytest-timeout
     #   pytest-xdist
-pytest-check==2.6.0
+pytest-check==2.6.2
     # via -r Examples/Python/tests/requirements.in
 pytest-repeat==0.9.4
     # via -r Examples/Python/tests/requirements.in
