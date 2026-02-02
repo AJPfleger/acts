@@ -1647,6 +1647,8 @@ class Gx2Fitter {
           static_cast<std::uint32_t>(nUpdate);
     }
 
+    ACTS_INFO("CTD NUPDATE " << nUpdate << " STEPS");
+
     // TODO write test for calculateTrackQuantities
     calculateTrackQuantities(track);
 
