@@ -6,6 +6,7 @@ Checks: >
   cppcoreguidelines-pro-type-member-init,
   google-readability-casting,
   google-explicit-constructor,
+  misc-include-cleaner,
   modernize-concat-nested-namespaces,
   modernize-use-equals-default,
   modernize-use-default-member-init,
