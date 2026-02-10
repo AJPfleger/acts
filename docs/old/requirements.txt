@@ -12,7 +12,7 @@ annotated-types==0.7.0
     # via pydantic
 attrs==25.4.0
     # via aiohttp
-babel==2.17.0
+babel==2.18.0
     # via sphinx
 breathe==4.36.0
     # via -r docs/old/requirements.in
@@ -24,7 +24,7 @@ charset-normalizer==3.4.4
     # via requests
 click==8.3.1
     # via typer
-cryptography==46.0.3
+cryptography==46.0.4
     # via pyjwt
 docutils==0.21.2
     # via
@@ -36,7 +36,7 @@ frozenlist==1.8.0
     # via
     #   aiohttp
     #   aiosignal
-fsspec==2026.1.0
+fsspec==2026.2.0
     # via -r docs/old/requirements.in
 gidgethub==5.4.0
     # via -r docs/old/requirements.in
@@ -62,7 +62,7 @@ mdit-py-plugins==0.5.0
     # via myst-parser
 mdurl==0.1.2
     # via markdown-it-py
-multidict==6.7.0
+multidict==6.7.1
     # via
     #   aiohttp
     #   yarl
@@ -84,7 +84,7 @@ pygments==2.19.2
     # via
     #   rich
     #   sphinx
-pyjwt==2.10.1
+pyjwt==2.11.0
     # via gidgethub
 python-dotenv==1.2.1
     # via -r docs/old/requirements.in
@@ -92,7 +92,7 @@ pyyaml==6.0.3
     # via myst-parser
 requests==2.32.5
     # via sphinx
-rich==14.3.1
+rich==14.3.2
     # via
     #   -r docs/old/requirements.in
     #   typer
