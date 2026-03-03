@@ -4,7 +4,7 @@ on:
   workflow_dispatch: # Allow running on-demand
   schedule:
     # Runs every Sunday at 1:23 UTC
-    - cron: '20 10 * * 2'
+    - cron: '23 * * * *'
 
 jobs:
   update-pip-requirements:
