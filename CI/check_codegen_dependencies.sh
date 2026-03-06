@@ -2,18 +2,18 @@
 set -e
 set -u
 
-PYTHON_VERSION=3.13
+PYTHON_VERSION=3.14
 
 input=$1
 input_abs=$(realpath "$input")
-input_rel=$(basename "$input_abs")
 dir=$(dirname "$input_abs")
-output=requirements.txt
+output=codegen/requirements.txt
 
 uv python install $PYTHON_VERSION
 pushd "$dir"
+cd ..
 uv pip compile \
   --python-version $PYTHON_VERSION \
-  "$input_rel" \
+  codegen/pyproject.toml \
   -o "$output"
 popd
