@@ -31,7 +31,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           lfs: true
 
@@ -130,7 +130,7 @@ jobs:
       ACTS_SEQUENCER_FAIL_ON_UNMASKED_FPE: 0
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           lfs: true
 
@@ -167,7 +167,7 @@ jobs:
     needs: [linux_ubuntu]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           lfs: true
 
@@ -249,7 +249,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           lfs: true
 
@@ -330,7 +330,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           lfs: true
 
@@ -414,11 +414,11 @@ jobs:
   external_eic-shell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           path: acts
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           repository: eic/EICrecon
           path: EICrecon
@@ -531,10 +531,10 @@ jobs:
   external_key4hep-nightlies:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           path: acts
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           repository: key4hep/k4ActsTracking
           path: k4ActsTracking
@@ -612,7 +612,7 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2404:85
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies

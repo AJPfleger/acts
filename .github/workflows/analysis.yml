@@ -32,7 +32,7 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2404:85
     steps:
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install dependencies
         uses: ./.github/actions/dependencies
@@ -119,7 +119,7 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2404_clang22:85
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
