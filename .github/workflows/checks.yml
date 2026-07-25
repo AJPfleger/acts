@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.14'
 
@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.14'
       - name: Check
@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.14'
       - name: Install dependencies
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.14'
       - name: Check
