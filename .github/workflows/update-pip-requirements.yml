@@ -12,37 +12,54 @@ permissions:
 
 jobs:
   update-pip-requirements:
-    # This action checks all monitored (specified in `folder_list` below) requirements.in
-    # files and generates a new requirements.txt file with pip-compile. If any
-    # requirements changed, a PR is created with the changes.
+    # This action checks all monitored (specified in `folder_list` below)
+    # requirements.in / pyproject.toml files and generates new
+    # requirements.txt files with uv pip compile. If any requirements
+    # changed, a PR is created with the changes.
 
     # Abort scheduled workflows dispatched by forks
     if: github.event_name != 'schedule' || github.repository == 'acts-project/acts'
 
     runs-on: ubuntu-slim
+
     env:
-      # This branch will receive updates each time the workflow runs
-      # It doesn't matter if it's deleted when merged, it'll be re-created
+      # This branch will receive updates each time the workflow runs.
+      # It doesn't matter if it's deleted when merged; it'll be re-created.
       BRANCH_NAME: auto-dependency-upgrades
+
     steps:
-      # persisted credentials are required for the push step below
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # Persisted credentials are required for the push step below.
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # The supported_python_versions.py helper is itself a uv script, so uv
+      # must be available before we can use it to determine the Python floor.
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       # Lowest Python version the lockfiles must install on, taken from
-      # `requires-python` in pyproject.toml so it is defined in exactly one place
+      # `requires-python` in pyproject.toml so it is defined in exactly one place.
       - name: Determine supported Python floor
         id: floor
-        run: echo "version=$(CI/supported_python_versions.py --floor)" >> $GITHUB_OUTPUT
+        shell: bash
+        run: |
+          version="$(CI/supported_python_versions.py --floor)"
+
+          if [[ -z "$version" ]]; then
+            echo "::error::Could not determine the supported Python floor."
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Supported Python floor: $version"
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ steps.floor.outputs.version }}
 
-      - name: Install uv
-        run: |
-          python -m pip install -U pip
-          python -m pip install -U uv
+      - name: Upgrade pip
+        run: python -m pip install -U pip
 
       - name: Compile all requirements.txt
         env:
@@ -57,6 +74,7 @@ jobs:
             Python/Examples/tests
             Examples/Scripts
           )
+
           for folder in "${folder_list[@]}"; do
             output_txt="${folder}/requirements.txt"
             input_in="${folder}/requirements.in"
@@ -77,40 +95,45 @@ jobs:
             # resolution rather than uv preferring the currently pinned versions.
             rm -f "$output_txt"
 
-            uv pip compile --universal --python-version "$PYTHON_VERSION" "$input" -o "$output_txt"
+            uv pip compile \
+              --universal \
+              --python-version "$PYTHON_VERSION" \
+              "$input" \
+              -o "$output_txt"
           done
 
       - name: Detect changes
         id: changes
-        run:
-          # This output boolean tells us if the dependencies have actually changed
-          echo "count=$(git status --porcelain=v1 2>/dev/null | wc -l)" >> $GITHUB_OUTPUT
+        run: |
+          # This output tells us whether the dependencies actually changed.
+          echo "count=$(git status --porcelain=v1 2>/dev/null | wc -l)" >> "$GITHUB_OUTPUT"
 
       - name: Commit & push changes
-        # Only push if changes exist
+        # Only push if changes exist.
         if: steps.changes.outputs.count > 0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
           git commit -m "Weekly Update: Regenerate requirements.txt"
           git push -f origin "$REF_NAME:$BRANCH_NAME"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REF_NAME: ${{ github.ref_name }}
 
       - name: Open pull request if needed
         if: steps.changes.outputs.count > 0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # Only open a PR if the branch is not attached to an existing one
+        # Only open a PR if the branch is not attached to an existing one.
         run: |
-          PR=$(gh pr list --head $BRANCH_NAME --json number -q '.[0].number')
-          if [ -z $PR ]; then
+          PR=$(gh pr list --head "$BRANCH_NAME" --json number -q '.[0].number')
+
+          if [[ -z "$PR" ]]; then
             gh pr create \
-            --head "$BRANCH_NAME" \
-            --title "chore: automated python requirements upgrades" \
-            --body "Full log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+              --head "$BRANCH_NAME" \
+              --title "chore: automated python requirements upgrades" \
+              --body "Full log: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           else
             echo "Pull request already exists, won't create a new one."
           fi
